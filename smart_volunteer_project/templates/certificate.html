@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Certificate of Appreciation</title>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Georgia', serif; 
+            background-color: #f8fafc;
+        }
+        .container {
+            width: 1000px;
+            height: 700px;
+            margin: 50px auto;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .outer-border {
+            border: 15px solid #4f46e5;
+            height: 100%;
+            box-sizing: border-box;
+            border-radius: 10px;
+            padding: 8px;
+        }
+        .inner-border {
+            border: 3px solid #e2e8f0;
+            height: 100%;
+            box-sizing: border-box;
+            border-radius: 4px;
+            text-align: center;
+            padding-top: 50px;
+            position: relative;
+        }
+        .title {
+            font-size: 55px;
+            color: #1e293b;
+            margin-bottom: 5px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .subtitle {
+            font-size: 24px;
+            color: #4f46e5;
+            margin-bottom: 60px;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+        }
+        .text {
+            font-size: 22px;
+            color: #64748b;
+            margin-bottom: 30px;
+        }
+        .name {
+            font-size: 48px;
+            color: #4f46e5;
+            border-bottom: 2px solid #cbd5e1;
+            display: inline-block;
+            padding-bottom: 10px;
+            font-weight: bold;
+            font-style: italic;
+            min-width: 500px;
+            margin-bottom: 40px;
+        }
+        .event {
+            font-size: 32px;
+            color: #0f172a;
+            font-weight: bold;
+            margin-bottom: 40px;
+        }
+        .footer {
+            position: absolute;
+            bottom: 50px;
+            left: 0;
+            width: 100%;
+            padding: 0 40px;
+            box-sizing: border-box;
+        }
+        .footer::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+        .footer-section {
+            float: left;
+            width: 33.33%;
+            text-align: center;
+        }
+        .footer-center {
+            text-align: center;
+        }
+        .footer-center-text {
+            color: #64748b;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+        .footer-center-ngo {
+            font-size: 20px;
+            color: #334155;
+            font-weight: bold;
+        }
+        .signature-line {
+            border-top: 1px solid #94a3b8;
+            padding-top: 10px;
+            color: #64748b;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .badge-wrapper {
+            position: absolute;
+            top: 35px;
+            right: 45px;
+            width: 100px;
+            height: 140px;
+        }
+        .ribbon-stem {
+            position: absolute;
+            top: 50px;
+            left: 25px;
+            width: 50px;
+            height: 75px;
+            background-color: #1e3a8a;
+            z-index: 1;
+        }
+        .ribbon-stem::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-bottom: 20px solid white;
+        }
+        .seal-outer {
+            position: absolute;
+            top: 0;
+            left: 5px;
+            width: 90px;
+            height: 90px;
+            z-index: 2;
+        }
+        .seal-star-0, .seal-star-1, .seal-star-2 {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 80px;
+            height: 80px;
+            background-color: #d4af37;
+        }
+        .seal-star-1 {
+            -webkit-transform: rotate(30deg);
+            transform: rotate(30deg);
+        }
+        .seal-star-2 {
+            -webkit-transform: rotate(60deg);
+            transform: rotate(60deg);
+        }
+        .seal-inner {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 3;
+            width: 60px;
+            height: 60px;
+            background-color: #2563eb;
+            border-radius: 50%;
+            border: 2px solid #fef08a;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="outer-border">
+            <div class="inner-border">
+                <div class="badge-wrapper">
+                    <div class="ribbon-stem"></div>
+                    <div class="seal-outer">
+                        <div class="seal-star-0"></div>
+                        <div class="seal-star-1"></div>
+                        <div class="seal-star-2"></div>
+                        <div class="seal-inner"></div>
+                    </div>
+                </div>
+                <div class="title">Certificate</div>
+                <div class="subtitle">Of Appreciation</div>
+                
+                <div class="text">This certificate is proudly awarded to</div>
+                
+                <div class="name">{{ volunteer_name }}</div>
+                
+                <div class="text">For successfully volunteering in the event</div>
+                
+                <div class="event">{{ event_title }}</div>
+
+                <div class="footer">
+                    <div class="footer-section">
+                        <div class="signature-line">Event Coordinator</div>
+                    </div>
+                    <div class="footer-section footer-center">
+                        <div class="footer-center-text">Organized by</div>
+                        <div class="footer-center-ngo">{{ ngo_name }}</div>
+                    </div>
+                    <div class="footer-section">
+                        <div class="signature-line">Organization Director</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Login | SmartVolunteer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Outfit', 'sans-serif'],
+                        serif: ['Merriweather', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body, html { overflow: hidden; height: 100%; margin: 0; padding: 0; }
+        
+        /* Left Panel Decor */
+        .decor-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            pointer-events: none;
+        }
+        
+        input::-ms-reveal, input::-ms-clear, input::-webkit-password-toggle, input::-webkit-reveal {
+            display: none !important; width: 0; height: 0;
+        }
+
+        .custom-input {
+            width: 100%; height: 44px;
+            border: 1px solid #e2e8f0; border-radius: 6px;
+            padding: 0 12px; font-size: 14px;
+            color: #334155; font-family: 'Inter', sans-serif;
+            background-color: transparent;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .custom-input::placeholder { color: #8f9ba8; }
+        .custom-input:focus { outline: none; border-color: #2b583e; box-shadow: 0 0 0 3px rgba(43, 88, 62, 0.15); }
+        
+        .form-label {
+            display: block; font-size: 11px; font-weight: 700; color: #64748b;
+            letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px;
+        }
+    </style>
+</head>
+<body class="h-screen w-full font-sans bg-[#2a3c33] flex items-center justify-center p-4"> <!-- Subtle dark greenish-grey outer background -->
+
+    <!-- Card Container -->
+    <div class="w-full max-w-[880px] min-h-[560px] bg-white rounded-2xl flex flex-col md:flex-row overflow-hidden relative shadow-2xl z-10 transition-all duration-300 ease-in-out">
+
+        <!-- Left Panel: Branding (Green) -->
+        <div class="hidden md:flex w-[43%] bg-[#2b583e] relative p-10 flex-col overflow-hidden">
+            <!-- Decorative Circles -->
+            <div class="decor-circle w-[400px] h-[400px] -top-32 -right-32"></div>
+            <div class="decor-circle w-[300px] h-[300px] -bottom-20 -left-20"></div>
+
+            <div class="relative z-10 mb-12">
+                <!-- Logo -->
+                <div class="flex items-center gap-2.5 select-none">
+                    <div class="w-[38px] h-[38px] bg-[#6ca681]/30 backdrop-blur-sm rounded-[10px] flex items-center justify-center shadow-inner text-xl leading-none">
+                        🤝
+                    </div>
+                    <span class="text-white font-bold text-[17px] tracking-wide font-sans">SmartVolunteer</span>
+                </div>
+            </div>
+
+            <div class="relative z-10 pr-6">
+                <h1 class="text-white font-serif font-bold text-[42px] leading-[1.1] mb-6 tracking-tight">
+                    Together we<br>build a <em class="text-[#89cc9d] font-serif italic pr-1">better</em><br>tomorrow.
+                </h1>
+                <p class="text-[#a1cbaf] text-[15px] leading-relaxed font-normal">
+                    Connect with thousands of volunteers making a real difference in communities across the globe.
+                </p>
+            </div>
+            
+        </div>
+
+        <!-- Right Panel: Form (White) -->
+        <div class="w-full md:w-[57%] bg-white p-10 flex flex-col justify-center relative">
+            
+            <div class="max-w-[400px] w-full mx-auto p-8 rounded-xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] bg-white border border-slate-50">
+                <h2 class="text-[34px] font-bold font-serif text-[#1e293b] tracking-tight mb-1">Welcome back</h2>
+                <p class="text-[14px] text-slate-400 font-light mb-6 flex-1">Access your SmartVolunteer account</p>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="mb-5 p-3 text-[13px] font-medium rounded-md {% if category == 'success' %}bg-emerald-50 text-emerald-700 border border-emerald-100{% else %}bg-rose-50 text-rose-700 border border-rose-100{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form action="{{ url_for('login') }}" method="POST" class="space-y-4">
+                    
+                    <!-- Username -->
+                    <div>
+                        <label class="form-label">USERNAME</label>
+                        <input type="text" name="username" required class="custom-input" placeholder="Enter your username">
+                    </div>
+
+                    <!-- Password -->
+                    <div>
+                        <label class="form-label">PASSWORD</label>
+                        <div class="relative">
+                            <input type="password" id="login_pass" name="password" required class="custom-input pr-[50px]" placeholder="Enter your password">
+                            <div class="absolute right-2 top-1/2 -translate-y-1/2 w-[34px] h-[30px] border border-slate-200 rounded text-slate-400 flex items-center justify-center cursor-pointer hover:bg-slate-50 hover:text-slate-600 transition-colors" onclick="toggleLoginPass()">
+                                <i data-lucide="eye" id="login_eye" class="w-[14px] h-[14px]"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CAPTCHA -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="form-label !mb-0">CAPTCHA</label>
+                        </div>
+                        <div class="flex gap-2">
+                            <div id="captcha-box" class="w-[90px] h-[44px] bg-[#f2ebd9] border border-[#e8dfc8] rounded-[6px] text-[18px] font-bold text-slate-700 flex items-center justify-center tracking-[4px] select-none font-mono flex-shrink-0">
+                                {{ captcha_text }}
+                            </div>
+                            <button type="button" onclick="refreshCaptcha()" class="w-[44px] h-[44px] flex-shrink-0 flex items-center justify-center text-slate-500 bg-white border border-slate-200 rounded-[6px] hover:bg-slate-50 transition-colors focus:outline-none" title="Refresh">
+                                <i data-lucide="rotate-cw" class="w-[16px] h-[16px] stroke-[2.5px] rotate-90"></i>
+                            </button>
+                            <input type="text" name="captcha" required class="custom-input flex-1 min-w-0 text-center uppercase" placeholder="Enter code" oninput="this.value = this.value.toUpperCase()">
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="w-full h-[46px] mb-2 mt-4 bg-gradient-to-r from-[#5ca376] to-[#1f452f] rounded-[6px] text-white font-bold text-[13px] tracking-[1.5px] uppercase hover:from-[#478f61] hover:to-[#173623] shadow-[0_4px_12px_rgba(43,88,62,0.2)] hover:shadow-[0_6px_16px_rgba(43,88,62,0.3)] transition-all duration-300 border-none">
+                        SECURE SIGN IN
+                    </button>
+                    
+                    <div class="h-2"></div>
+                </form>
+
+                <!-- Divider -->
+                <div class="relative py-2 mt-4 mb-5 flex items-center opacity-80">
+                    <div class="flex-grow border-t border-slate-200"></div>
+                    <span class="flex-shrink-0 mx-4 text-slate-300 text-[11px] font-bold tracking-widest uppercase">OR</span>
+                    <div class="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                <!-- Register -->
+                <div class="text-center">
+                    <p class="text-[13px] text-slate-500 font-medium">
+                        New to the platform? 
+                        <a href="{{ url_for('register') }}" class="font-bold text-[#1f452f] hover:text-[#112a1c] transition-colors ml-1">Register here</a>
+                    </p>
+                </div>
+
+                <!-- Back to Home -->
+                <div class="mt-4 flex justify-center">
+                    <a href="/" class="inline-flex items-center gap-2 text-slate-500 hover:text-[#2b583e] text-[13px] font-semibold transition-colors px-4 py-2 rounded-lg border border-transparent hover:border-slate-200 hover:bg-slate-50">
+                        <i data-lucide="home" class="w-[14px] h-[14px]"></i>
+                        <span>Back to Home</span>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Script -->
+    <script>
+        lucide.createIcons();
+
+        function toggleLoginPass() {
+            const input = document.getElementById('login_pass');
+            const icon = document.getElementById('login_eye');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        }
+
+        function refreshCaptcha() {
+            fetch('/refresh_captcha')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('captcha-box').innerText = data.captcha;
+                })
+                .catch(err => console.error('Error refreshing captcha:', err));
+        }
+    </script>
+</body>
+</html>

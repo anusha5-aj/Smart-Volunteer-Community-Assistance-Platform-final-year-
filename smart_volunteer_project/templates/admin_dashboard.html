@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal | SmartVolunteer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-gradient { background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); }
+        
+        /* Modern Sidebar Styles */
+        .sidebar-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sidebar-expanded { width: 18rem; }
+        .sidebar-collapsed { width: 5rem; }
+        
+        @media (max-width: 1023.98px) {
+            .sidebar-mobile {
+                position: fixed;
+                left: -100%;
+                z-index: 50;
+                height: 100vh;
+            }
+            .sidebar-mobile.open {
+                left: 0;
+            }
+        }
+        
+        .nav-item-text { transition: opacity 0.2s ease-in-out; }
+        .sidebar-collapsed .nav-item-text { opacity: 0; display: none; }
+        .sidebar-collapsed .sidebar-logo-text { display: none; }
+        .sidebar-collapsed .sidebar-footer-info { display: none; }
+        .sidebar-collapsed .nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
+        .sidebar-collapsed .sidebar-header { padding-left: 0; padding-right: 0; justify-content: center; }
+    </style>
+</head>
+<body class="bg-slate-50 flex min-h-screen overflow-x-hidden">
+
+    <!-- Mobile Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden transition-opacity duration-300 opacity-0"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar-transition sidebar-expanded sidebar-gradient text-slate-300 lg:flex flex-col border-r border-slate-800 sticky top-0 h-screen z-50 sidebar-mobile">
+        <div class="sidebar-header p-8 pb-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3 text-white">
+                <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 shrink-0">
+                    <i class="fa-solid fa-handshake-angle text-xl"></i>
+                </div>
+                <span class="text-xl font-bold tracking-tight sidebar-logo-text">SmartVolunteer</span>
+            </div>
+            <!-- Mobile Close Button -->
+            <button id="close-sidebar" class="lg:hidden text-slate-400 hover:text-white">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        
+        <div class="px-4 py-2">
+            <nav class="space-y-1">
+                <a href="#overview" class="nav-item flex items-center space-x-3 px-4 py-3 bg-blue-600/10 text-blue-400 rounded-xl font-bold transition-all hover:bg-blue-600/20 active-nav">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 shrink-0"></i>
+                    <span class="nav-item-text">Overview</span>
+                </a>
+                <a href="#ngos" class="nav-item flex items-center space-x-3 px-4 py-3 hover:bg-slate-800 hover:text-white rounded-xl transition-all">
+                    <i data-lucide="building-2" class="w-5 h-5 shrink-0"></i>
+                    <span class="nav-item-text">Manage NGOs</span>
+                </a>
+                <a href="#users" class="nav-item flex items-center space-x-3 px-4 py-3 hover:bg-slate-800 hover:text-white rounded-xl transition-all">
+                    <i data-lucide="users" class="w-5 h-5 shrink-0"></i>
+                    <span class="nav-item-text">Users</span>
+                </a>
+                <a href="#events" class="nav-item flex items-center space-x-3 px-4 py-3 hover:bg-slate-800 hover:text-white rounded-xl transition-all">
+                    <i data-lucide="calendar" class="w-5 h-5 shrink-0"></i>
+                    <span class="nav-item-text">Events</span>
+                </a>
+                <a href="#analytics" class="nav-item flex items-center space-x-3 px-4 py-3 hover:bg-slate-800 hover:text-white rounded-xl transition-all">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5 shrink-0"></i>
+                    <span class="nav-item-text">Analytics</span>
+                </a>
+            </nav>
+        </div>
+        
+        <div class="mt-auto p-4 border-t border-slate-800/50">
+            <div class="bg-slate-800/40 rounded-2xl p-4 mb-4">
+                <div class="flex items-center space-x-3 mb-3">
+                    <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-[10px] font-bold shrink-0">AD</div>
+                    <div class="sidebar-footer-info">
+                        <div class="text-xs font-bold text-white">System Admin</div>
+                        <div class="text-[10px] text-slate-500 italic uppercase">Superuser Access</div>
+                    </div>
+                </div>
+                <a href="{{ url_for('logout') }}" class="block w-full text-center py-2 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-lg text-xs font-bold transition-all">
+                    <span class="sidebar-footer-info">Log Out</span>
+                    <i data-lucide="log-out" class="w-4 h-4 mx-auto lg:hidden sidebar-collapsed-show"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-x-hidden">
+        <!-- Top Nav -->
+        <header class="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-10">
+            <div class="flex items-center space-x-4">
+                <!-- Hamburger Menu Toggle -->
+                <button id="sidebar-toggle" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                <div>
+                    <h2 class="text-[10px] lg:text-sm font-black text-slate-400 uppercase tracking-widest leading-none">Global Administration</h2>
+                    <h1 class="text-sm lg:text-xl font-extrabold text-slate-900">Platform Command Center</h1>
+                </div>
+            </div>
+            <div class="flex items-center space-x-6">
+                <div class="hidden md:flex items-center space-x-2 px-4 py-2 bg-slate-50 rounded-full border border-slate-100">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">System Status: Optimal</span>
+                </div>
+            </div>
+        </header>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="px-10 mt-6">
+                {% for message in messages %}
+                <div class="p-4 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl text-sm font-bold animate-fade-in list-none">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="p-10 space-y-12">
+            <!-- Overview Section -->
+            <section id="overview" class="scroll-mt-24">
+                <h3 class="text-2xl font-black text-slate-800 mb-8 flex items-center">
+                    <span class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white mr-3 shadow-lg shadow-blue-500/20">
+                        <i data-lucide="layout" class="w-4 h-4"></i>
+                    </span>
+                    Performance Overview
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-blue-50 text-8xl opacity-0 group-hover:opacity-100 transition-all -rotate-12 translate-x-4 group-hover:translate-x-0">
+                            <i data-lucide="building-2"></i>
+                        </div>
+                        <div class="relative">
+                            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6">
+                                <i data-lucide="building-2" class="w-6 h-6"></i>
+                            </div>
+                            <div class="text-3xl font-black text-slate-900 mb-1">{{ stats.total_ngos }}</div>
+                            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total NGOs</div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-purple-50 text-8xl opacity-0 group-hover:opacity-100 transition-all -rotate-12 translate-x-4 group-hover:translate-x-0">
+                            <i data-lucide="users"></i>
+                        </div>
+                        <div class="relative">
+                            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mb-6">
+                                <i data-lucide="users" class="w-6 h-6"></i>
+                            </div>
+                            <div class="text-3xl font-black text-slate-900 mb-1">{{ stats.total_volunteers }}</div>
+                            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Volunteers</div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-rose-50 text-8xl opacity-0 group-hover:opacity-100 transition-all -rotate-12 translate-x-4 group-hover:translate-x-0">
+                            <i data-lucide="calendar"></i>
+                        </div>
+                        <div class="relative">
+                            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mb-6">
+                                <i data-lucide="calendar" class="w-6 h-6"></i>
+                            </div>
+                            <div class="text-3xl font-black text-slate-900 mb-1">{{ stats.total_events }}</div>
+                            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Events</div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden group">
+                        <div class="absolute -right-4 -bottom-4 text-amber-50 text-8xl opacity-0 group-hover:opacity-100 transition-all -rotate-12 translate-x-4 group-hover:translate-x-0">
+                            <i data-lucide="file-text"></i>
+                        </div>
+                        <div class="relative">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-6">
+                                <i data-lucide="file-text" class="w-6 h-6"></i>
+                            </div>
+                            <div class="text-3xl font-black text-slate-900 mb-1">{{ stats.total_applications }}</div>
+                            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Applications</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- NGO Management -->
+            <section id="ngos" class="scroll-mt-24">
+                <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                    <div class="p-8 border-b border-slate-50 flex justify-between items-center">
+                        <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight flex items-center">
+                            <i data-lucide="link" class="w-5 h-5 mr-3 text-blue-500"></i>
+                            NGO Verification Queue
+                        </h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                                <tr>
+                                    <th class="px-8 py-5">NGO Name</th>
+                                    <th class="px-8 py-5">Registration Date</th>
+                                    <th class="px-8 py-5">Location</th>
+                                    <th class="px-8 py-5">Status</th>
+                                    <th class="px-8 py-5 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                {% for ngo in ngos %}
+                                <tr class="hover:bg-blue-50/30 transition-all group">
+                                    <td class="px-8 py-6">
+                                        <div class="font-extrabold text-slate-800 group-hover:text-blue-600 transition-colors">{{ ngo.organization_name }}</div>
+                                        <div class="text-[10px] text-slate-400 font-medium mt-1">{{ ngo.website }}</div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <span class="text-[10px] font-bold text-slate-500">Recent</span>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <div class="flex items-center text-sm text-slate-600 font-medium">
+                                            <i data-lucide="map-pin" class="w-3.5 h-3.5 mr-2 text-slate-400"></i>
+                                            {{ ngo.location }}
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        {% if ngo.status == 'Verified' %}
+                                            <span class="px-3 py-1 bg-green-100 text-green-800 text-[10px] font-black rounded-md uppercase tracking-tighter shadow-sm border border-green-200">Approved</span>
+                                        {% elif ngo.status == 'Rejected' %}
+                                            <span class="px-3 py-1 bg-red-100 text-red-800 text-[10px] font-black rounded-md uppercase tracking-tighter shadow-sm border border-red-200">Urgent</span>
+                                        {% else %}
+                                            <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-[10px] font-black rounded-md uppercase tracking-tighter shadow-sm border border-yellow-200">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-8 py-6 text-right">
+                                        <div class="flex flex-wrap items-center justify-end gap-2">
+                                            <a href="{{ url_for('ngo_profile', ngo_id=ngo.id) }}" target="_blank" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded drop-shadow-sm text-[10px] font-black uppercase hover:bg-blue-50 hover:text-blue-600 transition-colors">Review Docs</a>
+                                            {% if ngo.status != 'Verified' %}
+                                            <a href="{{ url_for('verify_ngo', ngo_id=ngo.id, status='Verified') }}" class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded drop-shadow-sm text-[10px] font-black uppercase hover:bg-blue-600 hover:text-white transition-all shadow-sm">
+                                                Approve
+                                            </a>
+                                            {% endif %}
+                                            {% if ngo.status != 'Rejected' %}
+                                            <a href="{{ url_for('verify_ngo', ngo_id=ngo.id, status='Rejected') }}" class="px-3 py-1.5 bg-rose-50 text-rose-600 rounded drop-shadow-sm text-[10px] font-black uppercase hover:bg-rose-600 hover:text-white transition-all shadow-sm">
+                                                Reject
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- User Management -->
+            <section id="users" class="scroll-mt-24">
+                <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight flex items-center">
+                            <i data-lucide="users" class="w-5 h-5 mr-3 text-purple-500"></i>
+                            User Master Registry
+                        </h3>
+                        <div class="flex flex-col md:flex-row items-center gap-4">
+                            <div class="relative">
+                                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                                <input type="text" id="user-search" placeholder="Search users..." class="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all outline-none w-full md:w-64">
+                            </div>
+                            <div class="flex bg-slate-100 p-1 rounded-xl">
+                                <button onclick="filterUsers('all')" id="btn-filter-all" class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-white text-slate-800 shadow-sm transition-all filter-btn">All Users</button>
+                                <button onclick="filterUsers('volunteer')" id="btn-filter-volunteer" class="px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-800 transition-all filter-btn">Volunteers</button>
+                                <button onclick="filterUsers('ngo')" id="btn-filter-ngo" class="px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-800 transition-all filter-btn">NGOs</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left" id="users-table">
+                            <thead class="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                                <tr>
+                                    <th class="px-8 py-5">Name</th>
+                                    <th class="px-8 py-5">Role</th>
+                                    <th class="px-8 py-5">Location</th>
+                                    <th class="px-8 py-5">Email</th>
+                                    <th class="px-8 py-5">Registration Date</th>
+                                    <th class="px-8 py-5 text-right" id="actions-header" style="display: none;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50" id="users-tbody">
+                                {% for user in users %}
+                                <tr class="hover:bg-slate-50 transition-all user-row" data-role="{{ user.role }}" data-name="{{ user.name|lower or user.username|lower }}" data-email="{{ user.email|lower }}">
+                                    <td class="px-8 py-6">
+                                        <div class="font-extrabold text-slate-800">{{ user.name or user.username }}</div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <span class="px-3 py-1 {% if user.role == 'ngo' %}bg-sky-50 text-sky-600 border border-sky-100{% else %}bg-purple-50 text-purple-600 border border-purple-100{% endif %} text-[9px] font-black rounded-md uppercase tracking-tighter shadow-sm">
+                                            {{ user.role }}
+                                        </span>
+                                    </td>
+                                    <td class="px-8 py-6 text-sm font-medium text-slate-600">{{ user.location or 'N/A' }}</td>
+                                    <td class="px-8 py-6 text-[10px] font-medium text-slate-500">{{ user.email }}</td>
+                                    <td class="px-8 py-6 text-[10px] font-bold text-slate-400">{{ user.created_at.strftime('%d-%m-%Y') if user.created_at else 'N/A' }}</td>
+                                    <td class="px-8 py-6 text-right actions-cell hidden">
+                                        <div class="flex justify-end gap-2">
+                                            <a href="{{ url_for('admin_volunteer_profile', vol_id=user.vol_id) if user.vol_id else '#' }}" class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded drop-shadow-sm text-[10px] font-black uppercase hover:bg-blue-600 hover:text-white transition-all shadow-sm">View</a>
+                                            <button onclick="confirmDelete({{ user.id }})" class="px-3 py-1.5 bg-rose-50 text-rose-600 rounded drop-shadow-sm text-[10px] font-black uppercase hover:bg-rose-600 hover:text-white transition-all shadow-sm">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Geographic Distribution -->
+            <section id="events" class="scroll-mt-24">
+                <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="p-8 border-b border-slate-50 flex justify-between items-center">
+                        <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight flex items-center">
+                            <i data-lucide="map" class="w-5 h-5 mr-3 text-emerald-500"></i>
+                            Geographic Distribution
+                        </h3>
+                    </div>
+                    <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100 flex flex-col items-center shadow-inner">
+                            <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-200 pb-2 w-full text-center">Volunteers by City</h4>
+                            <div class="w-full max-w-[250px] aspect-square flex items-center justify-center">
+                                <canvas id="volLocationsChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100 flex flex-col items-center shadow-inner">
+                            <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-200 pb-2 w-full text-center">NGOs by City</h4>
+                            <div class="w-full max-w-[250px] aspect-square flex items-center justify-center">
+                                <canvas id="ngoLocationsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics" class="scroll-mt-24">
+                <h3 class="text-2xl font-black text-slate-800 mb-8 flex items-center">
+                    <span class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white mr-3 shadow-lg shadow-indigo-500/20">
+                        <i data-lucide="pie-chart" class="w-4 h-4"></i>
+                    </span>
+                    Platform Analytics
+                </h3>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Ratio Pie -->
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col items-center">
+                        <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-8 text-center">NGO vs Volunteer Ratio</h4>
+                        <div class="w-full max-w-[200px] aspect-square flex items-center justify-center">
+                            <canvas id="ratioChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- Registration Trend Line Chart -->
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col items-center justify-between">
+                        <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-8 text-center">Registration Trend</h4>
+                        <div class="w-full flex-1 flex items-center justify-center">
+                            <canvas id="regTrendChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- Events per NGO Bar -->
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col items-center justify-between">
+                        <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-8 text-center">Events per NGO</h4>
+                        <div class="w-full flex-1 flex items-center justify-center">
+                            <canvas id="eventsDistChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Activity Feed -->
+            <section id="activity" class="scroll-mt-24 pb-20">
+                <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="p-8 border-b border-slate-50 flex justify-between items-center">
+                        <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight flex items-center">
+                            <i data-lucide="activity" class="w-5 h-5 mr-3 text-orange-500"></i>
+                            Recent Activity Feed
+                        </h3>
+                    </div>
+                    <div class="p-8 relative">
+                        <div class="absolute inset-y-8 left-[3.25rem] md:left-1/2 w-px bg-slate-200"></div>
+                        <div class="space-y-8 relative">
+                            {% for act in activities %}
+                            <div class="flex items-center justify-start md:justify-center relative group">
+                                <div class="w-10 h-10 rounded-full border-[3px] border-white bg-{{ act.color }}-100 text-{{ act.color }}-500 shadow-md shrink-0 absolute left-4 md:left-1/2 md:-ml-5 z-10 flex items-center justify-center">
+                                    <i data-lucide="{{ act.icon }}" class="w-4 h-4"></i>
+                                </div>
+                                <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] {% if loop.index0 % 2 == 0 %}ml-[5rem] md:ml-0 md:mr-auto pr-0 md:pr-4 text-left md:text-right{% else %}ml-[5rem] md:ml-auto md:pl-4 text-left{% endif %}">
+                                    <div class="{% if loop.index0 % 2 == 0 %}bg-slate-50{% else %}bg-white{% endif %} p-4 rounded-2xl border border-slate-100 shadow-sm inline-block w-full max-w-sm">
+                                        <div class="flex items-center justify-between gap-4 mb-1">
+                                            <h4 class="font-bold text-slate-800 text-[13px] leading-tight flex-1">{{ act.description }}</h4>
+                                            <span class="text-[9px] font-black text-slate-400 uppercase whitespace-nowrap">{{ act.relative_time }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% if not activities %}
+                            <div class="text-center py-10 text-slate-400 font-medium italic">No recent activities found.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        // Sidebar Elements
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const closeSidebar = document.getElementById('close-sidebar');
+        const body = document.body;
+
+        // Toggle Sidebar Functionality
+        function toggleSidebar() {
+            const isMobile = window.innerWidth < 1024;
+            
+            if (isMobile) {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('hidden');
+                setTimeout(() => {
+                    sidebarOverlay.classList.toggle('opacity-0');
+                }, 0);
+            } else {
+                sidebar.classList.toggle('sidebar-expanded');
+                sidebar.classList.toggle('sidebar-collapsed');
+                
+                // Save state to localStorage
+                const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
+                localStorage.setItem('adminSidebarCollapsed', isCollapsed);
+            }
+        }
+
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        if (closeSidebar) closeSidebar.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+
+        // Restore sidebar state on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const isCollapsed = localStorage.getItem('adminSidebarCollapsed') === 'true';
+            if (isCollapsed && window.innerWidth >= 1024) {
+                sidebar.classList.remove('sidebar-expanded');
+                sidebar.classList.add('sidebar-collapsed');
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.add('hidden');
+                sidebarOverlay.classList.add('opacity-0');
+            }
+        });
+
+        // Setup User Client Data for JS logic
+        const rawUsers = {{ users|tojson|safe }};
+        const rawNgos = {{ ngos|tojson|safe }};
+
+        // UI Filtering Logic
+        function filterUsers(role) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-slate-800', 'shadow-sm');
+                btn.classList.add('text-slate-500');
+            });
+            document.getElementById(`btn-filter-${role}`).classList.add('bg-white', 'text-slate-800', 'shadow-sm');
+            document.getElementById(`btn-filter-${role}`).classList.remove('text-slate-500');
+
+            const searchTerm = document.getElementById('user-search').value.toLowerCase();
+            const rows = document.querySelectorAll('#users-tbody .user-row');
+
+            rows.forEach(row => {
+                const rowRole = row.getAttribute('data-role');
+                const rowName = row.getAttribute('data-name');
+                const rowEmail = row.getAttribute('data-email');
+                
+                const matchesRole = role === 'all' || rowRole === role;
+                const matchesSearch = rowName.includes(searchTerm) || rowEmail.includes(searchTerm);
+
+                if (matchesRole && matchesSearch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Toggle Actions column visibility
+            const actionsHeader = document.getElementById('actions-header');
+            const actionsCells = document.querySelectorAll('.actions-cell');
+            if (role === 'volunteer') {
+                actionsHeader.style.display = '';
+                actionsCells.forEach(cell => cell.classList.remove('hidden'));
+            } else {
+                actionsHeader.style.display = 'none';
+                actionsCells.forEach(cell => cell.classList.add('hidden'));
+            }
+        }
+        
+        function confirmDelete(userId) {
+            if (confirm("Are you sure you want to delete this volunteer? This action cannot be undone.")) {
+                window.location.href = `/admin/delete_volunteer/${userId}`;
+            }
+        }
+        
+        document.getElementById('user-search').addEventListener('input', () => {
+            const activeElem = document.querySelector('.filter-btn.bg-white');
+            const activeFilter = activeElem ? activeElem.id.replace('btn-filter-', '') : 'all';
+            filterUsers(activeFilter);
+        });
+
+        // Compute Geographic Data
+        const volLocations = {};
+        const ngoLocations = {};
+        
+        rawUsers.forEach(u => {
+            if (u.role === 'volunteer') {
+                const loc = u.location || 'Unknown';
+                volLocations[loc] = (volLocations[loc] || 0) + 1;
+            }
+        });
+
+        rawNgos.forEach(n => {
+            const loc = n.location || 'Unknown';
+            ngoLocations[loc] = (ngoLocations[loc] || 0) + 1;
+        });
+
+        // Geographic Charts
+        new Chart(document.getElementById('volLocationsChart').getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: Object.keys(volLocations),
+                datasets: [{ data: Object.values(volLocations), backgroundColor: ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }]
+            },
+            options: { plugins: { legend: { position: 'bottom', labels: { font: { weight: 'bold', size: 10 } } } } }
+        });
+
+        new Chart(document.getElementById('ngoLocationsChart').getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: Object.keys(ngoLocations),
+                datasets: [{ data: Object.values(ngoLocations), backgroundColor: ['#0ea5e9', '#6366f1', '#ec4899', '#f97316', '#84cc16'], borderWidth: 0 }]
+            },
+            options: { plugins: { legend: { position: 'bottom', labels: { font: { weight: 'bold', size: 10 } } } } }
+        });
+
+        // Chart.js Implementations - Analytics
+        const ratioCtx = document.getElementById('ratioChart').getContext('2d');
+        new Chart(ratioCtx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys({{ analytics.user_ratio|tojson|safe }}),
+                datasets: [{
+                    data: Object.values({{ analytics.user_ratio|tojson|safe }}),
+                    backgroundColor: ['#8b5cf6', '#0ea5e9'],
+                    borderWidth: 0
+                }]
+            },
+            options: { plugins: { legend: { position: 'bottom', labels: { font: { weight: 'bold', size: 10 } } } } }
+        });
+
+        const trendCtx = document.getElementById('regTrendChart').getContext('2d');
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: {{ analytics.reg_trend.labels|tojson|safe if (analytics and analytics.reg_trend) else ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'] }},
+                datasets: [
+                    { 
+                        label: 'Volunteers', 
+                        data: {{ analytics.reg_trend.volunteers|tojson|safe if (analytics and analytics.reg_trend) else [12, 19, 15, 25, 22, 30] }}, 
+                        borderColor: '#8b5cf6', 
+                        tension: 0.4, 
+                        borderWidth: 3 
+                    },
+                    { 
+                        label: 'NGOs', 
+                        data: {{ analytics.reg_trend.ngos|tojson|safe if (analytics and analytics.reg_trend) else [3, 5, 4, 8, 7, 10] }}, 
+                        borderColor: '#0ea5e9', 
+                        tension: 0.4, 
+                        borderWidth: 3 
+                    }
+                ]
+            },
+            options: { 
+                scales: { 
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                    x: { grid: { display: false }, ticks: { font: { size: 9, weight: 'bold' } } }
+                },
+                plugins: { legend: { position: 'bottom', labels: { font: { weight: 'bold', size: 10 } } } }
+            }
+        });
+
+        const distCtx = document.getElementById('eventsDistChart').getContext('2d');
+        new Chart(distCtx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys({{ analytics.ngo_events_dist|tojson|safe }}),
+                datasets: [{
+                    label: 'Events Created',
+                    data: Object.values({{ analytics.ngo_events_dist|tojson|safe }}),
+                    backgroundColor: '#6366f1',
+                    borderRadius: 8
+                }]
+            },
+            options: { 
+                scales: { 
+                    y: { beginAtZero: true, grid: { display: false } },
+                    x: { grid: { display: false }, ticks: { font: { size: 9, weight: 'bold' } } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Simple Nav Highlighting
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('nav a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 150) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('bg-blue-600/10', 'text-blue-400', 'font-bold');
+                if (link.getAttribute('href').slice(1) === current) {
+                    link.classList.add('bg-blue-600/10', 'text-blue-400', 'font-bold');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Profile | Admin Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-8 md:p-12 lg:p-20">
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Breadcrumb & Actions -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+            <div>
+                <a href="{{ url_for('admin_dashboard') }}#users" class="inline-flex items-center text-xs font-black text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors mb-4">
+                    <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                    Back to Registry
+                </a>
+                <h1 class="text-4xl font-black text-slate-900 tracking-tighter uppercase">Volunteer Profile</h1>
+                <p class="text-sm font-bold text-slate-400 mt-2 uppercase tracking-tight">System Identity: #VOL-{{ vol.id }}</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="confirmDeleteIndividual({{ vol.user_id }})" class="px-6 py-3 bg-rose-50 text-rose-600 rounded-xl font-black text-[10px] uppercase tracking-widest border border-rose-100 hover:bg-rose-600 hover:text-white transition-all shadow-sm">
+                    Terminate Account
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <!-- Basic Info Card -->
+            <div class="lg:col-span-1 space-y-8">
+                <div class="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm text-center">
+                    <div class="relative inline-block mb-6">
+                        <div class="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center text-slate-300 overflow-hidden border-4 border-white shadow-md">
+                            {% if vol.avatar_url %}
+                            <img src="{{ vol.avatar_url }}" alt="Avatar" class="w-full h-full object-cover">
+                            {% else %}
+                            <i data-lucide="user" class="w-10 h-10"></i>
+                            {% endif %}
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-green-500 border-4 border-white flex items-center justify-center">
+                            <i data-lucide="check" class="w-3 h-3 text-white"></i>
+                        </div>
+                    </div>
+                    <h2 class="text-xl font-black text-slate-900 uppercase tracking-tight">{{ vol.first_name }} {{ vol.last_name }}</h2>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">@{{ vol.username }}</p>
+                    
+                    <div class="mt-8 pt-8 border-t border-slate-50 space-y-4">
+                        <div class="flex flex-col items-center">
+                            <span class="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] mb-1">Email Affinity</span>
+                            <span class="text-sm font-bold text-slate-700">{{ vol.email }}</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span class="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] mb-1">Deployment Location</span>
+                            <span class="text-sm font-bold text-slate-700">{{ vol.location or 'Not Specified' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center">
+                        <i data-lucide="info" class="w-4 h-4 mr-2 text-blue-500"></i> Registration Intel
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-bold text-slate-400">Joined Date</span>
+                            <span class="font-black text-slate-900 uppercase">{{ vol.created_at.strftime('%d %b %Y') if vol.created_at else 'Unknown' }}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-bold text-slate-400">Current Status</span>
+                            <span class="px-2 py-0.5 bg-green-50 text-green-600 rounded text-[9px] font-black uppercase tracking-widest border border-green-100">Activated</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Intel -->
+            <div class="lg:col-span-2 space-y-10">
+                <!-- Impact Bio -->
+                <div class="bg-white rounded-[2.5rem] p-12 border border-slate-100 shadow-sm">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 flex items-center">
+                        <i data-lucide="message-square" class="w-4 h-4 mr-2 text-blue-500"></i> Volunteer Statement of Intent
+                    </h3>
+                    <div class="bg-slate-50/50 p-8 rounded-3xl border border-slate-100 relative italic">
+                        <i class="fa-solid fa-quote-left absolute top-4 left-4 text-slate-200 text-2xl"></i>
+                        <p class="text-slate-600 font-medium leading-relaxed relative z-10 pl-6">
+                            {{ vol.impact_bio if vol.impact_bio else 'No official statement of intent recorded in the system for this volunteer.' }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Skills & Capacity -->
+                <div class="bg-white rounded-[2.5rem] p-12 border border-slate-100 shadow-sm">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 flex items-center">
+                        <i data-lucide="zap" class="w-4 h-4 mr-2 text-amber-500"></i> Professional Capabilities
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div>
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-4">Skill Arsenal</span>
+                            <div class="flex flex-wrap gap-2">
+                                {% if vol.skills %}
+                                    {% for skill in vol.skills.split(',') %}
+                                    <span class="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-blue-100">
+                                        {{ skill.strip() }}
+                                    </span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-xs italic text-slate-400">No verified skills detected.</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-4">Operational Window</span>
+                            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm font-bold text-slate-700">
+                                {{ vol.availability or 'As needed / On-call deployment' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Experience -->
+                <div class="bg-white rounded-[2.5rem] p-12 border border-slate-100 shadow-sm">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 flex items-center">
+                        <i data-lucide="briefcase" class="w-4 h-4 mr-2 text-purple-500"></i> Field Experience Documentation
+                    </h3>
+                    <p class="text-slate-500 text-sm font-medium leading-relaxed">
+                        {{ vol.experience if vol.experience else 'No field experience documentation provided. Volunteer may be seeking entry-level deployment opportunities.' }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function confirmDeleteIndividual(userId) {
+            if (confirm("DANGER: You are about to terminate this volunteer's account permanently from the platform. All association data will be purged. Proceed?")) {
+                window.location.href = `/admin/delete_volunteer/${userId}`;
+            }
+        }
+    </script>
+</body>
+</html>

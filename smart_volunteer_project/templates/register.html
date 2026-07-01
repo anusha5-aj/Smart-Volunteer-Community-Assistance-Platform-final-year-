@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration | Smart Volunteer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        function updateRole(role) {
+            // Update hidden input
+            document.getElementById('role_input').value = role;
+            
+            const volCard = document.getElementById('card_vol');
+            const ngoCard = document.getElementById('card_ngo');
+            const volFields = document.getElementById('form_vol');
+            const ngoFields = document.getElementById('form_ngo');
+            const formSection = document.getElementById('registration_form_section');
+
+            // Reset classes for both cards (Smaller padding p-4)
+            volCard.className = "p-4 bg-white border-2 border-slate-100 rounded-2xl cursor-pointer transition-all duration-300 hover:shadow-md text-center group";
+            ngoCard.className = "p-4 bg-white border-2 border-slate-100 rounded-2xl cursor-pointer transition-all duration-300 hover:shadow-md text-center group";
+            
+            if (role === 'volunteer') {
+                // Selected state: Light Blue
+                volCard.className = "p-4 bg-blue-50 border-blue-500 rounded-2xl cursor-pointer transition-all duration-300 shadow-lg shadow-blue-100 ring-2 ring-blue-500/20 text-center scale-[1.02]";
+                volFields.classList.remove('hidden');
+                ngoFields.classList.add('hidden');
+            } else {
+                // Selected state: Light Green
+                ngoCard.className = "p-4 bg-green-50 border-green-500 rounded-2xl cursor-pointer transition-all duration-300 shadow-lg shadow-green-100 ring-2 ring-green-500/20 text-center scale-[1.02]";
+                ngoFields.classList.remove('hidden');
+                volFields.classList.add('hidden');
+            }
+
+            // Smooth scroll to form section
+            if (formSection) {
+                setTimeout(() => {
+                    formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+        }
+
+        function toggleRegisterPassword() {
+            const input = document.getElementById('reg_password');
+            const icon = document.getElementById('reg_pass_icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-indigo-100 via-slate-50 to-purple-100 min-h-screen py-10 px-4 sm:px-6 font-sans">
+    <div class="max-w-3xl mx-auto">
+        <!-- Logo Header -->
+        <div class="flex flex-col items-center mb-10">
+            <a href="/" class="flex flex-col items-center group mb-4">
+                <i class="fa-solid fa-handshake text-blue-600 text-3xl group-hover:scale-110 transition-transform"></i>
+                <span class="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 tracking-tight">SmartVolunteer</span>
+            </a>
+            <h2 class="text-2xl font-black text-slate-900 mt-2">Create Account</h2>
+            <p class="text-slate-500 mt-1 font-medium">Join our global community of changemakers</p>
+        </div>
+
+        <form action="{{ url_for('register') }}" method="POST">
+            <input type="hidden" name="role" id="role_input" value="volunteer">
+
+            <!-- Role Selection Selection -->
+            <div class="mb-10">
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest text-center mb-6">Specify Account Type</p>
+                <div class="grid grid-cols-2 gap-4 max-w-xl mx-auto">
+                    <!-- Volunteer Card (Default Selected) - Smaller Padding p-4 -->
+                    <div id="card_vol" onclick="updateRole('volunteer')" 
+                        class="p-4 bg-blue-50 border-blue-500 rounded-2xl cursor-pointer transition-all duration-300 shadow-lg shadow-blue-100 ring-2 ring-blue-500/20 text-center scale-[1.02]">
+                        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                            <i data-lucide="user" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="font-black text-slate-900 text-base">Volunteer</h3>
+                        <p class="text-[10px] text-slate-500 mt-0.5 uppercase font-bold tracking-tighter">I want to help</p>
+                    </div>
+                    
+                    <!-- NGO Card -->
+                    <div id="card_ngo" onclick="updateRole('ngo')" 
+                        class="p-4 bg-white border-2 border-slate-100 rounded-2xl cursor-pointer transition-all duration-300 hover:shadow-md text-center group">
+                        <div class="w-10 h-10 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                            <i data-lucide="building" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="font-black text-slate-900 text-base">NGO</h3>
+                        <p class="text-[10px] text-slate-500 mt-0.5 uppercase font-bold tracking-tighter">We need help</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Form Card Container - Added ID for scrolling -->
+            <div id="registration_form_section" class="bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 p-8 sm:p-10 overflow-hidden relative scroll-mt-10">
+                <!-- Subtle Decorative Gradient Top -->
+                <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-green-500"></div>
+                
+                <!-- Common Credentials Section -->
+                <div class="mb-10">
+                    <h4 class="flex items-center text-xs font-black text-slate-800 uppercase tracking-widest mb-6">
+                        <span class="w-1.5 h-5 bg-blue-500 rounded-full mr-2"></span>
+                        Account Security
+                    </h4>
+                    <div class="grid sm:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Username</label>
+                            <input type="text" name="username" required 
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-sm font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Password</label>
+                            <div class="relative group">
+                                <input type="password" id="reg_password" name="password" required 
+                                    class="w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-sm font-semibold">
+                                <button type="button" onclick="toggleRegisterPassword()" class="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+                                    <i data-lucide="eye" id="reg_pass_icon" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Volunteer Specific Profile Fields -->
+                <div id="form_vol" class="space-y-8 animate-fade-in group">
+                    <h4 class="flex items-center text-xs font-black text-slate-800 uppercase tracking-widest mb-6">
+                        <span class="w-1.5 h-5 bg-blue-500 rounded-full mr-2"></span>
+                        Individual Profile
+                    </h4>
+                    <div class="grid sm:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">First Name</label>
+                            <input type="text" name="first_name" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:ring-4 focus:ring-blue-500/10 outline-none text-sm font-semibold transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Last Name</label>
+                            <input type="text" name="last_name" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:ring-4 focus:ring-blue-500/10 outline-none text-sm font-semibold transition-all">
+                        </div>
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Email Address</label>
+                            <input type="email" name="email" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:ring-4 focus:ring-blue-500/10 outline-none text-sm font-semibold transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Gender</label>
+                            <select name="gender" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:ring-4 focus:ring-blue-500/10 outline-none text-sm font-bold transition-all text-slate-700">
+                                <option>Male</option>
+                                <option>Female</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Residential Location</label>
+                        <input type="text" name="location" placeholder="City, Country" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:ring-4 focus:ring-blue-500/10 outline-none text-sm font-semibold transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Field of Expertise (Skills)</label>
+                        <textarea name="skills" rows="3" placeholder="e.g. Graphic Design, First Aid, Translation..." class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:ring-4 focus:ring-blue-500/10 outline-none text-sm font-semibold transition-all resize-none"></textarea>
+                    </div>
+                </div>
+
+                <!-- NGO Specific Organizational Fields -->
+                <div id="form_ngo" class="hidden space-y-8 animate-fade-in group">
+                    <h4 class="flex items-center text-xs font-black text-slate-800 uppercase tracking-widest mb-6">
+                        <span class="w-1.5 h-5 bg-green-500 rounded-full mr-2"></span>
+                        Organization Identity
+                    </h4>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Official Organization Name</label>
+                        <input type="text" name="organization_name" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none text-sm font-semibold transition-all">
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Registration/Trust ID</label>
+                            <input type="text" name="trust_id" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none text-sm font-semibold transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Website URL</label>
+                            <input type="url" name="website" placeholder="https://..." class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none text-sm font-semibold transition-all">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Headquarters Address</label>
+                        <input type="text" name="location" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none text-sm font-bold transition-all">
+                    </div>
+                </div>
+
+                <div class="mt-10">
+                    <button type="submit" class="w-full bg-slate-900 text-white font-black py-4 rounded-xl shadow-xl shadow-slate-200 hover:bg-black transition-all active:scale-[0.98] text-base uppercase tracking-widest">
+                        Complete Registration
+                    </button>
+                    <p class="text-center text-sm text-slate-500 mt-8 font-medium">
+                        Already have an account? <a href="{{ url_for('login') }}" class="text-blue-600 font-black hover:underline underline-offset-4">Sign in here</a>
+                    </p>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

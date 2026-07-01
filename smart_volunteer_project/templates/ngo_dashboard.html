@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NGO Dashboard | SmartVolunteer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            scroll-behavior: smooth;
+        }
+
+        /* Sidebar Transitions */
+        #sidebar {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 280px;
+        }
+
+        #sidebar.collapsed {
+            min-width: 80px;
+            width: 80px;
+        }
+
+        #sidebar.collapsed .sidebar-text,
+        #sidebar.collapsed .sidebar-header-text,
+        #sidebar.collapsed .sidebar-org-card {
+            display: none;
+        }
+
+        #sidebar.collapsed .sidebar-footer-text {
+            display: none;
+        }
+
+        #sidebar.collapsed .sidebar-link {
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        #sidebar.collapsed .sidebar-link i {
+            margin-right: 0;
+        }
+
+        .sidebar-link.active {
+            background-color: #4f46e5;
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2);
+        }
+
+        .sidebar-link:not(.active):hover {
+            background-color: #f1f5f9;
+            color: #4f46e5;
+        }
+
+        /* Modern Blue Sidebar Theme */
+        .sidebar-item-active {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            color: white;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            transition: all 0.3s ease;
+        }
+
+        .status-badge-Open {
+            background-color: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .status-badge-Closed {
+            background-color: #fef2f2;
+            color: #dc2626;
+        }
+
+        .status-badge-Completed {
+            background-color: #eff6ff;
+            color: #2563eb;
+        }
+
+        .description-full {
+            display: none;
+        }
+
+        .expanded .description-short {
+            display: none;
+        }
+
+        .expanded .description-full {
+            display: block;
+        }
+
+        .dashboard-section {
+            display: none;
+        }
+
+        #dashboard-section {
+            display: block;
+        }
+
+        /* Header Styles */
+        .top-header {
+            height: 72px;
+        }
+
+        /* Chatbot Styles */
+        #chatbot-window {
+            max-height: 520px;
+            z-index: 1000;
+            animation: chatSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes chatSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .chat-message {
+            max-width: 85%;
+            padding: 0.85rem 1.1rem;
+            border-radius: 1.25rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .bot-message {
+            background: #f1f5f9;
+            color: #1e293b;
+            align-self: flex-start;
+            border-bottom-left-radius: 0.25rem;
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 0.25rem;
+        }
+
+        #chat-messages {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="bg-white border-r border-slate-200 flex flex-col z-50 shadow-xl shadow-slate-200/20">
+        <!-- Logo Section -->
+        <div class="p-6 flex items-center space-x-4 border-b border-slate-50">
+            <div
+                class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200 shrink-0">
+                <i class="fa-solid fa-handshake-angle text-white text-lg"></i>
+            </div>
+            <div class="sidebar-header-text">
+                <span class="text-xl font-black tracking-tight text-slate-800">NGO<span
+                        class="text-indigo-600">Portal</span></span>
+            </div>
+        </div>
+
+        <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto custom-scrollbar">
+            <button onclick="showSection('dashboard-section')"
+                class="sidebar-link active w-full flex items-center px-4 py-3.5 rounded-xl text-sm font-bold transition-all group">
+                <i data-lucide="layout-dashboard" class="w-[20px] h-[20px] mr-3.5 shrink-0"></i>
+                <span class="sidebar-text">Dashboard</span>
+            </button>
+            <button onclick="showSection('events-section')"
+                class="sidebar-link w-full flex items-center px-4 py-3.5 rounded-xl text-sm font-bold transition-all text-slate-500 group">
+                <i data-lucide="calendar" class="w-[20px] h-[20px] mr-3.5 shrink-0"></i>
+                <span class="sidebar-text">My Events</span>
+            </button>
+            <button onclick="showSection('volunteers-section')"
+                class="sidebar-link w-full flex items-center px-4 py-3.5 rounded-xl text-sm font-bold transition-all text-slate-500 group">
+                <i data-lucide="users" class="w-[20px] h-[20px] mr-3.5 shrink-0"></i>
+                <span class="sidebar-text">Volunteers</span>
+            </button>
+            <button onclick="showSection('applications-section')"
+                class="sidebar-link w-full flex items-center px-4 py-3.5 rounded-xl text-sm font-bold transition-all text-slate-500 group">
+                <i data-lucide="clipboard-list" class="w-[20px] h-[20px] mr-3.5 shrink-0"></i>
+                <span class="sidebar-text">Applications</span>
+            </button>
+            <button onclick="showSection('notifications-section')"
+                class="sidebar-link w-full flex items-center px-4 py-3.5 rounded-xl text-sm font-bold transition-all text-slate-500 group relative">
+                <i data-lucide="bell" class="w-[20px] h-[20px] mr-3.5 shrink-0"></i>
+                <span class="sidebar-text">Notifications</span>
+                <span id="notif-badge"
+                    class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 bg-rose-500 text-white text-[10px] flex items-center justify-center rounded-full font-black border-2 border-white {% if notifications|length == 0 %}hidden{% endif %}">{{
+                    notifications|length }}</span>
+            </button>
+
+            <div class="pt-6 pb-2">
+                <p
+                    class="px-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 sidebar-header-text">
+                    Organization Section</p>
+                <button onclick="showSection('settings-section')"
+                    class="sidebar-link w-full flex items-center px-4 py-3.5 rounded-xl text-sm font-bold transition-all text-slate-500 group">
+                    <i data-lucide="building-2" class="w-[20px] h-[20px] mr-3.5 shrink-0"></i>
+                    <span class="sidebar-text">Org Profile</span>
+                </button>
+                <button onclick="showSection('analytics-section')"
+                    class="sidebar-link w-full flex items-center px-4 py-3.5 rounded-xl text-sm font-bold transition-all text-slate-500 group">
+                    <i data-lucide="bar-chart-3" class="w-[20px] h-[20px] mr-3.5 shrink-0"></i>
+                    <span class="sidebar-text">Analytics</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Footer -->
+        <div class="p-4 border-t border-slate-100">
+            <div class="sidebar-org-card bg-slate-50 border border-slate-100 rounded-2xl p-4 mb-4">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Organization</p>
+                <p class="text-[13px] font-bold text-slate-800 truncate">{{ ngo.organization_name }}</p>
+            </div>
+            <a href="{{ url_for('logout') }}"
+                class="flex items-center px-4 py-3.5 rounded-xl text-sm font-bold text-rose-500 hover:bg-rose-50 transition-all group">
+                <i data-lucide="log-out" class="w-[20px] h-[20px] mr-3.5 shrink-0"></i>
+                <span class="sidebar-text">Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full relative overflow-y-auto custom-scrollbar" id="main-content">
+        <!-- Persistent Top Bar -->
+        <header
+            class="bg-white/90 backdrop-blur-xl border-b border-slate-200 px-6 py-4 sticky top-0 z-40 flex items-center justify-between shadow-sm top-header">
+            <div class="flex items-center space-x-6">
+                <!-- Hamburger Menu -->
+                <button onclick="toggleSidebar()"
+                    class="p-2.5 rounded-xl text-slate-500 hover:bg-slate-50 transition-all focus:outline-none">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                <div class="h-6 w-[1px] bg-slate-200 hidden md:block"></div>
+                <h2 class="text-xl font-bold text-slate-800 tracking-tight" id="current-section-title">Dashboard</h2>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-3.5 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-[13px] font-bold text-slate-900 leading-tight">{{ current_user.username }}</p>
+                        <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Administrator</p>
+                    </div>
+                    <div
+                        class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-sm font-bold shadow-md shadow-indigo-100">
+                        {{ current_user.username[0]|upper }}
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-10 pb-48">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="space-y-4">
+                {% for category, message in messages %}
+                <div
+                    class="flex items-center p-4 text-sm rounded-2xl shadow-sm animate-fade-in
+                                {% if category == 'success' %}bg-green-50 text-green-800 border-l-4 border-green-500{% elif category == 'error' %}bg-rose-50 text-rose-800 border-l-4 border-rose-500{% else %}bg-indigo-50 text-indigo-800 border-l-4 border-indigo-500{% endif %}">
+                    <i data-lucide="info" class="w-5 h-5 mr-3"></i>
+                    <span class="font-bold">{{ message }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <!-- Dashboard Home (Overview) -->
+            <div id="dashboard-section" class="dashboard-section">
+                <section id="overview">
+                    <!-- ... overview content ... -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Stat Cards (Image 2 style) -->
+                        <div
+                            class="bg-white p-7 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col items-start group">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 mb-5">
+                                <i data-lucide="calendar" class="w-5 h-5"></i>
+                            </div>
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Events
+                            </p>
+                            <h4 class="text-3xl font-black text-slate-800 tracking-tight">{{ stats.total_events }}</h4>
+                        </div>
+                        <div
+                            class="bg-white p-7 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col items-start group">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-5">
+                                <i data-lucide="users" class="w-5 h-5"></i>
+                            </div>
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Applications
+                            </p>
+                            <h4 class="text-3xl font-black text-slate-800 tracking-tight">{{ stats.total_applications }}
+                            </h4>
+                        </div>
+                        <div
+                            class="bg-white p-7 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col items-start group">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 mb-5">
+                                <i data-lucide="check-circle" class="w-5 h-5"></i>
+                            </div>
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Accepted</p>
+                            <h4 class="text-3xl font-black text-slate-800 tracking-tight">{{ stats.accepted_volunteers
+                                }}</h4>
+                        </div>
+                        <div
+                            class="bg-white p-7 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col items-start group">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 mb-5">
+                                <i data-lucide="clock" class="w-5 h-5"></i>
+                            </div>
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Pending</p>
+                            <h4 class="text-3xl font-black text-slate-800 tracking-tight">{{ stats.pending_applications
+                                }}</h4>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="mt-8 mb-4">
+                        <h3 class="text-xl font-bold text-slate-900">Quick Actions</h3>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <a href="{{ url_for('create_event') }}"
+                            class="group bg-indigo-600 px-5 py-4 rounded-2xl text-white shadow-xl shadow-indigo-100 flex flex-row items-center gap-4 hover:bg-indigo-700 transition-all">
+                            <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="plus-circle" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold leading-tight">Create Event</h4>
+                                <p class="text-indigo-200 text-[10px] mt-0.5">Launch a new volunteer program</p>
+                            </div>
+                        </a>
+                        <button onclick="showSection('volunteers-section')"
+                            class="group bg-white px-5 py-4 rounded-2xl border border-slate-100 shadow-sm flex flex-row items-center gap-4 hover:border-indigo-600 transition-all text-left">
+                            <div
+                                class="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 flex-shrink-0">
+                                <i data-lucide="search" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-900 leading-tight">Find Volunteers</h4>
+                                <p class="text-slate-400 text-[10px] mt-0.5">Search directory and invite by skills</p>
+                            </div>
+                        </button>
+                        <button onclick="showSection('applications-section')"
+                            class="group bg-white px-5 py-4 rounded-2xl border border-slate-100 shadow-sm flex flex-row items-center gap-4 hover:border-indigo-600 transition-all text-left">
+                            <div
+                                class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                                <i data-lucide="clipboard-check" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-900 leading-tight">Review Apps</h4>
+                                <p class="text-slate-400 text-[10px] mt-0.5">Vetting and placement</p>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Recent Events -->
+                    <div class="mt-8">
+                        <div class="flex items-center justify-between mb-8">
+                            <h3 class="text-xl font-bold text-slate-900 flex items-center">
+                                <i data-lucide="history" class="w-5 h-5 mr-3 text-indigo-500"></i> Recent Events
+                            </h3>
+                            <button onclick="showSection('events-section')"
+                                class="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:underline">View
+                                All</button>
+                        </div>
+                        <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+                            <table class="w-full text-left table-fixed">
+                                <colgroup>
+                                    <col class="w-[40%]">
+                                    <col class="w-[25%]">
+                                    <col class="w-[15%]">
+                                    <col class="w-[20%]">
+                                </colgroup>
+                                <thead class="bg-slate-50 border-b border-slate-100">
+                                    <tr>
+                                        <th
+                                            class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                            Event Title</th>
+                                        <th
+                                            class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                            Location</th>
+                                        <th
+                                            class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                            Status</th>
+                                        <th
+                                            class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
+                                            Applications</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    {% for event in events[:5] %}
+                                    <tr
+                                        class="hover:bg-indigo-50/30 transition-colors group {% if loop.index is even %}bg-slate-50/40{% endif %}">
+                                        <td class="px-4 py-4">
+                                            <p
+                                                class="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors truncate">
+                                                {{ event.event_title }}</p>
+                                        </td>
+                                        <td class="px-4 py-4">
+                                            <p class="text-xs font-semibold text-slate-500 flex items-center"><i
+                                                    data-lucide="map-pin"
+                                                    class="w-3 h-3 mr-1 text-rose-300 flex-shrink-0"></i><span
+                                                    class="truncate">{{ event.location }}</span></p>
+                                        </td>
+                                        <td class="px-4 py-4">
+                                            <span
+                                                class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase status-badge-{{ event.status }} border border-slate-100">{{
+                                                event.status }}</span>
+                                        </td>
+                                        <td class="px-4 py-4 text-right">
+                                            <span
+                                                class="text-xs font-black text-slate-700 bg-slate-100 px-3 py-1 rounded-lg">{{
+                                                event.app_count|default(0) }}</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 2. EVENTS SECTION -->
+            <div id="events-section" class="dashboard-section">
+                <section id="events" class="space-y-8">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold text-slate-900">Manage Events</h3>
+                            <p class="text-sm text-slate-500">Track initiatives and update statuses.</p>
+                        </div>
+                        <a href="{{ url_for('create_event') }}"
+                            class="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-xl hover:bg-indigo-700 transition-all">+
+                            Create New Event</a>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {% for event in events %}
+                        <div class="event-card bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm flex flex-col group relative"
+                            id="event-{{ event.id }}">
+                            <div class="flex justify-between items-start mb-6">
+                                <span
+                                    class="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-full uppercase">{{
+                                    event.event_date }}</span>
+                                <div class="flex space-x-2">
+                                    <div class="relative group/status">
+                                        <button class="p-2 text-slate-400 hover:text-indigo-600 transition-all"><i
+                                                data-lucide="more-vertical" class="w-4 h-4"></i></button>
+                                        <div
+                                            class="absolute right-0 top-full mt-2 w-40 bg-white shadow-2xl rounded-xl border border-slate-100 z-50 hidden group-hover/status:block overflow-hidden">
+                                            <a href="{{ url_for('update_event_status', event_id=event.id, status='Open') }}"
+                                                class="block px-4 py-2 text-xs font-bold hover:bg-slate-50 text-indigo-600">Mark
+                                                Open</a>
+                                            <a href="{{ url_for('update_event_status', event_id=event.id, status='Closed') }}"
+                                                class="block px-4 py-2 text-xs font-bold hover:bg-slate-50 text-rose-600">Close
+                                                Event</a>
+                                            <a href="{{ url_for('update_event_status', event_id=event.id, status='Completed') }}"
+                                                class="block px-4 py-2 text-xs font-bold hover:bg-slate-50 text-blue-600">Mark
+                                                Completed</a>
+                                        </div>
+                                    </div>
+                                    <a href="{{ url_for('edit_event', event_id=event.id) }}"
+                                        class="p-2 text-slate-400 hover:text-indigo-600 transition-all"><i
+                                            data-lucide="edit-3" class="w-4 h-4"></i></a>
+                                    <a href="{{ url_for('delete_event', event_id=event.id) }}"
+                                        onclick="return confirm('Are you sure?')"
+                                        class="p-2 text-slate-400 hover:text-rose-600 transition-all"><i
+                                            data-lucide="trash-2" class="w-4 h-4"></i></a>
+                                </div>
+                            </div>
+                            <h3
+                                class="text-xl font-bold text-slate-900 mb-2 truncate group-hover:text-indigo-600 transition-all">
+                                {{ event.event_title }}</h3>
+                            <div class="flex items-center space-x-3 mb-4">
+                                <span
+                                    class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase status-badge-{{ event.status }} border border-slate-100">{{
+                                    event.status }}</span>
+                                <span
+                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
+                                    <i data-lucide="map-pin" class="w-3 h-3 mr-1 text-rose-400"></i> {{ event.location
+                                    }}
+                                </span>
+                            </div>
+                            <div class="flex flex-col space-y-1 mb-6">
+                                <span
+                                    class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center">
+                                    <i data-lucide="clock" class="w-3 h-3 mr-2 text-indigo-400"></i> {{ event.start_time | time12 }} - {{ event.end_time | time12 }}
+                                </span>
+                                <span
+                                    class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center">
+                                    <i data-lucide="users" class="w-3 h-3 mr-2 text-emerald-400"></i> Needed: {{
+                                    event.volunteer_limit }}
+                                </span>
+                            </div>
+                            <div class="space-y-4 flex-1">
+                                <div class="description-container">
+                                    <p
+                                        class="text-sm text-slate-500 leading-relaxed description-short line-clamp-2 h-10">
+                                        {{ event.description }}</p>
+                                    <p class="text-sm text-slate-500 leading-relaxed description-full">{{
+                                        event.description }}</p>
+                                </div>
+                                <button onclick="toggleEventExpansion({{ event.id }})"
+                                    class="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:underline flex items-center group/btn"
+                                    id="btn-{{ event.id }}">
+                                    <span class="btn-text">Read More</span>
+                                    <i data-lucide="chevron-down" class="ml-1 w-3 h-3 transition-transform"></i>
+                                </button>
+                                <div class="flex flex-wrap gap-2 pt-4 border-t border-slate-50">
+                                    {% for skill in event.required_skills.split(',') %}
+                                    <span
+                                        class="text-[9px] bg-slate-100 text-slate-500 px-2 py-1 rounded-md border border-slate-200 font-bold uppercase">{{
+                                        skill.strip() }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            </div>
+
+            <!-- 3. VOLUNTEERS SECTION -->
+            <div id="volunteers-section" class="dashboard-section">
+                <section id="volunteers" class="space-y-6">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-2">
+                        <div>
+                            <h3 class="text-2xl font-bold text-slate-900">Volunteer Directory</h3>
+                            <p class="text-sm text-slate-500">Discover and partner with passionate changemakers using AI
+                                insights.</p>
+                        </div>
+                    </div>
+
+                    <!-- Search and Filters -->
+                    <div
+                        class="flex flex-row items-center gap-3 p-3 bg-white rounded-2xl border border-slate-100 shadow-sm relative z-10">
+                        <div class="relative flex-1 min-w-0">
+                            <i data-lucide="search"
+                                class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                            <input type="text" id="volunteerSearch" onkeyup="filterAndRecommend()"
+                                placeholder="Search by skill or location..."
+                                class="w-full pl-11 pr-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-medium text-sm">
+                        </div>
+                        <select id="eventTargetSelection" onchange="filterAndRecommend()"
+                            class="w-52 flex-shrink-0 px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-bold text-xs text-slate-500 bg-white">
+                            <option value="">Target Event (AI Match)</option>
+                            {% for e in events %}
+                            <option value="{{ e.id }}" data-skills="{{ e.required_skills }}">{{ e.event_title }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <select id="volunteerSort" onchange="sortVolunteers()"
+                            class="w-44 flex-shrink-0 px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-bold text-xs text-slate-500 bg-white cursor-pointer">
+                            <option value="name">Sort by: Name</option>
+                            <option value="location">Sort by: Location</option>
+                            <option value="match">Sort by: Highest Match</option>
+                        </select>
+                    </div>
+
+                    <!-- AI Recommended Volunteers Section -->
+                    <div id="aiRecommendations"
+                        class="hidden animate-fade-in p-5 bg-emerald-50/50 rounded-[2rem] border border-emerald-100/50">
+                        <div class="flex items-center justify-between mb-4 px-2">
+                            <h4
+                                class="text-[10px] font-black uppercase text-emerald-600 tracking-widest flex items-center">
+                                AI Recommended Volunteers
+                            </h4>
+                            <span
+                                class="px-3 py-1 bg-emerald-600 text-white text-[9px] font-black rounded-lg uppercase tracking-widest shadow-sm">Best
+                                Matches</span>
+                        </div>
+                        <div class="grid grid-cols-1 gap-3" id="recommendationsGrid"></div>
+                    </div>
+
+                    <!-- Regular Volunteers Section -->
+                    <div class="space-y-4">
+                        <div id="regularVolunteersHeader" class="hidden mb-2 px-2">
+                            <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                Other Volunteers
+                            </h4>
+                        </div>
+                        <div class="grid grid-cols-1 gap-3" id="volunteerGrid">
+                            {% for vol in volunteers %}
+                            <div class="volunteer-card bg-white rounded-2xl py-2.5 px-6 border border-slate-100 shadow-sm flex items-center gap-6 hover:shadow-md transition-all duration-200"
+                                data-id="{{ vol.id }}" data-name="{{ vol.first_name|lower }} {{ vol.last_name|lower }}"
+                                data-skills="{{ vol.skills|lower }}" data-location="{{ (vol.location or '')|lower }}"
+                                data-match="0" data-raw-skills="{{ vol.skills }}"
+                                data-impact-bio="{{ vol.impact_bio or '' }}">
+
+                                <!-- Avatar with initials -->
+                                <div
+                                    class="w-11 h-11 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold flex-shrink-0 border border-indigo-500 text-base shadow-sm">
+                                    {% if vol.avatar_url %}
+                                    <img src="{{ vol.avatar_url }}" class="w-full h-full rounded-xl object-cover">
+                                    {% else %}
+                                    {{ vol.first_name[0] }}{{ vol.last_name[0] }}
+                                    {% endif %}
+                                </div>
+
+                                <!-- Name / Email / Location -->
+                                <div class="w-56 flex-shrink-0 min-w-0">
+                                    <h4 class="font-bold text-slate-800 text-sm leading-tight truncate">{{
+                                        vol.first_name }} {{ vol.last_name }}</h4>
+                                    <div class="flex items-center text-[10px] font-semibold text-slate-400 mt-0.5">
+                                        <i data-lucide="map-pin" class="w-3 h-3 mr-1 text-slate-300 flex-shrink-0"></i>
+                                        <span class="truncate">{{ vol.location or 'Location Not Set' }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Skills as Pills -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex flex-wrap gap-2">
+                                        {% for skill in vol.skills.split(',') %}
+                                        <span
+                                            class="text-[9px] bg-slate-50 text-slate-500 px-2 py-0.5 rounded-lg border border-slate-100 font-bold uppercase tracking-tight whitespace-nowrap">{{
+                                            skill.strip() }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <!-- Match Score and Actions aligned right -->
+                                <div class="flex items-center gap-4 flex-shrink-0">
+                                    <div
+                                        class="match-badge hidden flex items-center px-3 py-1.5 rounded-lg border animate-fade-in">
+                                        <span class="match-score-text text-[10px] font-bold uppercase tracking-tight">AI
+                                            Match: 0%</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button onclick='openProfileModal({{ vol|tojson }})'
+                                            class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:border-indigo-600 hover:text-indigo-600 transition-all whitespace-nowrap">View
+                                            Profile</button>
+                                        <button onclick="openInviteModal('{{ vol.id }}')"
+                                            class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-indigo-700 transition-all whitespace-nowrap shadow-sm">Invite</button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+
+
+            <!-- 4. APPLICATIONS SECTION -->
+            <div id="applications-section" class="dashboard-section">
+                <section id="applications" class="space-y-8">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold text-slate-900">Vetting Hub</h3>
+                            <p class="text-sm text-slate-500">Review and manage volunteer placements.</p>
+                        </div>
+                        <div
+                            class="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 overflow-x-auto custom-scrollbar">
+                            <button onclick="filterApps('All')"
+                                class="app-filter-btn active px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white shadow-sm text-indigo-600 whitespace-nowrap">All</button>
+                            <button onclick="filterApps('Pending')"
+                                class="app-filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 whitespace-nowrap">Pending</button>
+                            <button onclick="filterApps('Accepted')"
+                                class="app-filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 whitespace-nowrap">Accepted</button>
+                            <button onclick="filterApps('Rejected')"
+                                class="app-filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 whitespace-nowrap">Rejected</button>
+                            <button onclick="filterApps('Certificate')"
+                                class="app-filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 whitespace-nowrap">Certificate</button>
+                        </div>
+                    </div>
+
+                    <div id="applications-container" class="flex flex-col lg:flex-row gap-6 mt-6 min-h-[600px] mode-all group-apps">
+                        <style>
+                            .group-apps.mode-certificate .default-view {
+                                display: none !important;
+                            }
+                            .group-apps.mode-certificate .certificate-view {
+                                display: flex !important;
+                            }
+                            .group-apps.mode-all .certificate-view,
+                            .group-apps.mode-pending .certificate-view,
+                            .group-apps.mode-accepted .certificate-view,
+                            .group-apps.mode-rejected .certificate-view {
+                                display: none !important;
+                            }
+                        </style>
+
+                        <!-- Left Master List -->
+                        <div id="applications-list" class="w-full lg:w-[35%] flex flex-col gap-3 min-w-[300px] max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
+                            {% for app in applications %}
+                            <div class="app-master-item p-4 bg-white rounded-2xl border border-slate-100 shadow-sm cursor-pointer hover:border-indigo-600 transition-all"
+                                 data-id="{{ app.id }}"
+                                 data-status="{{ app.status }}" 
+                                 data-event-status="{{ app.event_status }}"
+                                 onclick="selectApp('{{ app.id }}', this)">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3 w-full">
+                                        <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold shrink-0">
+                                            {% if app.avatar_url %}
+                                            <img src="{{ app.avatar_url }}" class="w-full h-full object-cover rounded-xl">
+                                            {% else %}
+                                            {{ app.first_name[0] }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="min-w-0 pr-2">
+                                            <h4 class="font-bold text-slate-900 text-sm truncate">{{ app.first_name }} {{ app.last_name }}</h4>
+                                            <p class="text-[10px] font-bold text-slate-500 truncate mt-0.5">{{ app.event_title }}</p>
+                                        </div>
+                                    </div>
+                                    <span class="px-2 py-1 shrink-0 rounded-full text-[8px] font-black uppercase tracking-widest
+                                        {% if app.status == 'Pending' %}bg-amber-50 text-amber-600{% elif app.status == 'Accepted' %}bg-green-50 text-green-600{% elif app.status == 'Invited' %}bg-blue-50 text-blue-600{% else %}bg-rose-50 text-rose-600{% endif %}">
+                                        {{ app.status }}
+                                    </span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <div id="no-apps-message" class="hidden py-10 text-center text-slate-400">
+                                <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                                <p class="text-[10px] font-bold uppercase tracking-widest">No applications</p>
+                            </div>
+                        </div>
+
+                        <!-- Right Detail View -->
+                        <div class="w-full lg:w-[65%] bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm flex flex-col relative min-h-[500px]" id="app-detail-container">
+                            <!-- Empty State -->
+                            <div id="app-detail-empty" class="absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-white rounded-[2.5rem] z-10 animate-fade-in opacity-100 transition-opacity">
+                                <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4">
+                                    <i data-lucide="mouse-pointer-click" class="w-8 h-8 text-slate-300"></i>
+                                </div>
+                                <h4 class="font-bold text-slate-700">Select an Applicant</h4>
+                                <p class="text-xs text-slate-400 mt-2 max-w-[240px]">Click on an application from the list to view full details and take action.</p>
+                            </div>
+
+                            {% for app in applications %}
+                            <div id="app-detail-{{ app.id }}" class="app-detail-card hidden flex-col h-full application-card animate-fade-in">
+                                <div class="flex flex-col sm:flex-row sm:items-start justify-between mb-8 pb-8 border-b border-slate-50">
+                                    <div class="flex items-center">
+                                        <div class="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold overflow-hidden shrink-0 text-xl">
+                                            {% if app.avatar_url %}
+                                            <img src="{{ app.avatar_url }}" class="w-full h-full object-cover">
+                                            {% else %}
+                                            {{ app.first_name[0] }}{% if app.last_name %} {{ app.last_name[0] }}{% endif %}
+                                            {% endif %}
+                                        </div>
+                                        <div class="ml-4 flex flex-col items-start">
+                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Applicant</p>
+                                            <h4 class="text-lg font-black text-slate-900 tracking-tight leading-none">{{ app.first_name }} {{ app.last_name }}</h4>
+                                            <p class="text-[11px] font-bold text-slate-500 mt-1.5">{{ app.event_title }}</p>
+                                        </div>
+                                    </div>
+                                    <span class="mt-4 sm:mt-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest w-fit h-fit
+                                        {% if app.status == 'Pending' %}bg-amber-50 text-amber-600{% elif app.status == 'Accepted' %}bg-green-50 text-green-600{% elif app.status == 'Invited' %}bg-blue-50 text-blue-600{% else %}bg-rose-50 text-rose-600{% endif %}">
+                                        {{ app.status }}
+                                    </span>
+                                </div>
+                                
+                                <div class="flex-1 space-y-6">
+                                    <div class="py-2 border-b border-slate-50">
+                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">AI Match Score</p>
+                                        <div class="flex items-end gap-3 mb-2">
+                                            <span class="text-3xl font-black leading-none {% if app.match_percentage < 33 %}text-rose-600{% elif app.match_percentage <= 66 %}text-amber-500{% else %}text-emerald-600{% endif %}">
+                                                {{ app.match_percentage|round }}%
+                                            </span>
+                                            <span class="text-[11px] font-bold text-slate-500 mb-0.5 leading-tight max-w-[120px]">
+                                                {% if not app.missing_skills %}All required skills matched{% else %}Partial skill match{% endif %}
+                                            </span>
+                                        </div>
+                                        <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden mt-3">
+                                            <div class="h-full {% if app.match_percentage < 33 %}bg-rose-500{% elif app.match_percentage <= 66 %}bg-amber-400{% else %}bg-emerald-500{% endif %} rounded-full transition-all" style="width: {{ app.match_percentage|round }}%"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="py-1 border-b border-slate-50">
+                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Matched Skills</p>
+                                        {% if app.matched_skills %}
+                                        <div class="flex gap-2 flex-wrap pb-3">
+                                            {% for skill in app.matched_skills.split(',') %}
+                                            <span class="px-2.5 py-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg whitespace-nowrap">{{ skill.strip() }}</span>
+                                            {% endfor %}
+                                        </div>
+                                        {% else %}
+                                        <p class="text-xs font-bold text-slate-400 italic pb-3">None</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="py-1">
+                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Missing Skills</p>
+                                        {% if app.missing_skills %}
+                                        <div class="flex gap-2 flex-wrap">
+                                            {% for skill in app.missing_skills.split(',') %}
+                                            <span class="px-2.5 py-1 text-[10px] font-bold text-slate-500 bg-slate-50 border border-slate-100 rounded-lg whitespace-nowrap">{{ skill.strip() }}</span>
+                                            {% endfor %}
+                                        </div>
+                                        {% else %}
+                                        <p class="text-[11px] font-bold text-emerald-600">All skills matched</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="mt-8 pt-6 border-t border-slate-50 flex flex-col gap-2 shrink-0">
+                                    <!-- Default View Action Buttons -->
+                                    <div class="default-view flex flex-col gap-2">
+                                        {% if app.status == 'Pending' or app.status == 'Invited' %}
+                                        <a href="{{ url_for('update_application_status', app_id=app.id, status='Accepted') }}"
+                                            class="w-full px-4 py-3 bg-indigo-600 text-white text-center rounded-xl text-xs font-black transition-all shadow-md hover:bg-indigo-700 hover:-translate-y-0.5">Accept Volunteer</a>
+                                        <button onclick='openProfileModal({{ app|tojson }})'
+                                            class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-700 transition-all hover:border-indigo-600 hover:text-indigo-600">View full profile</button>
+                                        <a href="{{ url_for('update_application_status', app_id=app.id, status='Rejected') }}"
+                                            class="w-full px-4 py-3 bg-white border border-slate-200 text-slate-700 text-center rounded-xl text-xs font-black transition-all hover:border-rose-300 hover:text-rose-600">Reject</a>
+                                        {% elif app.status == 'Accepted' %}
+                                        <button onclick='openProfileModal({{ app|tojson }})'
+                                            class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-700 transition-all hover:border-indigo-600 hover:text-indigo-600">View full profile</button>
+                                        {% elif app.status == 'Rejected' %}
+                                        <div
+                                            class="px-4 py-3 bg-rose-50 border border-rose-100 text-rose-600 text-center rounded-xl text-xs font-black">
+                                            Status: Rejected</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Certificate View -->
+                                    <div class="certificate-view flex-col gap-2 hidden">
+                                        <div
+                                            class="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
+                                            <span
+                                                class="text-xs font-bold text-slate-500">Event
+                                                Status</span>
+                                            <span class="text-xs font-black uppercase text-indigo-600">{{
+                                                app.event_status|default('Completed') }}</span>
+                                        </div>
+
+                                        {% if app.attendance == 'present' %}
+                                        <div
+                                            class="flex items-center justify-between px-4 py-3 bg-green-50 rounded-xl border border-green-100">
+                                            <span
+                                                class="text-xs font-bold text-green-600">Attendance</span>
+                                            <span class="text-xs font-black uppercase text-green-700">Present</span>
+                                        </div>
+                                        <div class="text-center mt-1"><span
+                                                class="text-xs font-black text-emerald-600 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-100 inline-block w-full">Certificate
+                                                Generated</span></div>
+                                        {% else %}
+                                        <div class="flex gap-2">
+                                            <a href="{{ url_for('mark_attendance', app_id=app.id, attendance='present') }}"
+                                                class="flex-1 px-4 py-3 bg-white border border-slate-200 text-slate-600 text-center rounded-xl text-xs font-black transition-all hover:border-indigo-600 hover:text-indigo-600">Mark
+                                                Present</a>
+                                            <a href="{{ url_for('mark_attendance', app_id=app.id, attendance='absent') }}"
+                                                class="flex-1 px-4 py-3 bg-white border border-slate-200 text-slate-600 text-center rounded-xl text-xs font-black transition-all hover:border-rose-600 hover:text-rose-600">Mark
+                                                Absent</a>
+                                        </div>
+                                        <div class="text-center mt-1"><span
+                                                class="text-[10px] font-black text-rose-500 bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-100 inline-block">Not
+                                                Eligible</span></div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                </section>
+            </div>
+
+            <!-- 5. NOTIFICATIONS SECTION -->
+            <div id="notifications-section" class="dashboard-section">
+                <section id="notifications" class="space-y-8">
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-900">Activity Updates</h3>
+                        <p class="text-sm text-slate-500">Real-time platform events.</p>
+                    </div>
+                    <div class="max-w-4xl space-y-4">
+                        {% for n in notifications %}
+                        <div
+                            class="p-6 rounded-[2rem] bg-white border border-slate-100 shadow-sm flex items-start gap-6 card-hover group relative overflow-hidden">
+                            <div
+                                class="absolute top-0 left-0 w-1 h-full {% if n.type == 'info' %}bg-indigo-500{% elif n.type == 'success' %}bg-green-500{% else %}bg-rose-500{% endif %}">
+                            </div>
+                            <div
+                                class="w-10 h-10 rounded-xl {% if n.type == 'info' %}bg-indigo-50 text-indigo-600{% elif n.type == 'success' %}bg-green-50 text-green-600{% else %}bg-rose-50 text-rose-600{% endif %} flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="bell" class="w-5 h-5"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[8px] font-black uppercase tracking-widest text-indigo-400">{{
+                                        n.type }}</span>
+                                    <span class="text-[8px] font-bold text-slate-300">{{ n.created_at }}</span>
+                                </div>
+                                <p class="text-slate-700 font-semibold text-sm">{{ n.message }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            </div>
+
+            <!-- 6. SETTINGS SECTION -->
+            <div id="settings-section" class="dashboard-section">
+                <section id="settings" class="space-y-12">
+                    <div
+                        class="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm overflow-hidden relative">
+                        <div class="absolute top-0 left-0 w-full h-2 bg-indigo-600"></div>
+                        <div class="flex items-center space-x-4 mb-10">
+                            <div
+                                class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                                <i data-lucide="building-2" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-900 uppercase tracking-tight">Organization Profile
+                            </h3>
+                        </div>
+                        <form action="{{ url_for('ngo_settings') }}" method="POST" class="space-y-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <input type="text" name="organization_name" value="{{ ngo.organization_name }}"
+                                    placeholder="Org Name"
+                                    class="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-bold text-slate-700">
+                                <input type="text" name="trust_id" value="{{ ngo.trust_id }}" placeholder="Trust ID"
+                                    class="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-bold text-slate-700">
+                                <input type="url" name="website" value="{{ ngo.website }}" placeholder="Website"
+                                    class="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-bold text-slate-700">
+                                <input type="text" name="location" value="{{ ngo.location }}" placeholder="Location"
+                                    class="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-bold text-slate-700">
+                            </div>
+                            <textarea name="description" rows="5"
+                                class="w-full px-6 py-6 rounded-[2rem] bg-slate-50 border border-slate-100 outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-medium text-slate-600 resize-none">{{ ngo.description }}</textarea>
+                            <button type="submit"
+                                class="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs">Update
+                                Profile</button>
+                        </form>
+                    </div>
+
+                    <div
+                        class="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm overflow-hidden relative">
+                        <div class="absolute top-0 left-0 w-full h-2 bg-rose-500"></div>
+                        <div class="flex items-center space-x-4 mb-10">
+                            <div
+                                class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center">
+                                <i data-lucide="shield-lock" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-900 uppercase tracking-tight">Security</h3>
+                        </div>
+                        <form action="{{ url_for('ngo_change_password') }}" method="POST"
+                            class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <input type="password" name="new_password" required placeholder="New Password"
+                                class="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:ring-2 focus:ring-rose-500 transition-all font-bold text-slate-700">
+                            <input type="password" name="confirm_password" required placeholder="Confirm Password"
+                                class="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:ring-2 focus:ring-rose-500 transition-all font-bold text-slate-700">
+                            <button type="submit"
+                                class="md:col-span-2 px-10 py-4 bg-rose-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs">Update
+                                Password</button>
+                        </form>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 7. ANALYTICS SECTION -->
+            <div id="analytics-section" class="dashboard-section">
+                <section id="analytics">
+                    <div class="mb-12">
+                        <h3 class="text-3xl font-black text-slate-900 tracking-tight mb-2">Impact Intelligence</h3>
+                        <p class="text-sm font-bold text-slate-400">Visual mapping of your community footprint</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Status Distribution -->
+                        <div
+                            class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm flex flex-col items-center">
+                            <h4
+                                class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-10 flex items-center">
+                                <i data-lucide="pie-chart" class="w-4 h-4 mr-2 text-indigo-400"></i> Application Funnel
+                            </h4>
+                            <div class="w-full max-w-[300px]">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Top Volunteer Skills -->
+                        <div
+                            class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm flex flex-col items-center">
+                            <h4
+                                class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-10 flex items-center">
+                                <i data-lucide="award" class="w-4 h-4 mr-2 text-sky-400"></i> Top Talent Pool Skills
+                            </h4>
+                            <div class="w-full max-w-[300px]">
+                                <canvas id="skillChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Event Engagement -->
+                        <div class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm lg:col-span-2">
+                            <h4
+                                class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-10 flex items-center">
+                                <i data-lucide="bar-chart-3" class="w-4 h-4 mr-2 text-emerald-400"></i> Applications per
+                                Opportunity
+                            </h4>
+                            <div class="w-full h-80">
+                                <canvas id="eventChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals (Re-using Volunteer Profile Modal Logic) -->
+    <div id="profile-modal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-[3rem] w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="h-24 bg-indigo-600 relative">
+                <button onclick="closeProfileModal()"
+                    class="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-all"><i
+                        data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div class="p-10 pt-14 overflow-y-auto custom-scrollbar">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 id="modal-name" class="text-3xl font-black text-slate-900 uppercase tracking-tighter"></h3>
+                </div>
+                <!-- ... Profile Detail Content ... -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8" id="modal-details-grid"></div>
+
+
+                <div class="mb-8">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Skills Verified
+                    </h4>
+                    <div id="modal-skills" class="flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite Modal -->
+    <div id="invite-modal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-[3rem] w-full max-w-md p-10 shadow-2xl">
+            <h3 class="text-xl font-bold text-slate-900 mb-6 tracking-tight">Invite to Program</h3>
+            <div class="space-y-3 max-h-64 overflow-y-auto custom-scrollbar mb-8">
+                {% for e in events %}
+                <a href="/invite_volunteer/{{ vol_id }}/{{ e.id }}" id="invite-link-{{ e.id }}"
+                    class="block p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-indigo-600 transition-all font-bold text-xs">
+                    {{ e.event_title }}
+                </a>
+                {% endfor %}
+            </div>
+            <button onclick="document.getElementById('invite-modal').classList.add('hidden')"
+                class="w-full py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // 0. Toggle Sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+
+            // Save state to localStorage
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+        }
+
+        // Initialize sidebar state
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (isCollapsed) {
+                sidebar.classList.add('collapsed');
+            }
+        });
+
+        // Chatbot Functionality
+        let chatInitialized = false;
+        function toggleChat() {
+            const chatWin = document.getElementById('chatbot-window');
+            const openIcon = document.getElementById('chat-icon-open');
+            const closeIcon = document.getElementById('chat-icon-close');
+            const isHidden = chatWin.classList.contains('hidden');
+
+            if (!isHidden) {
+                chatWin.classList.add('hidden');
+                chatWin.classList.remove('flex');
+                if(openIcon) openIcon.classList.remove('hidden');
+                if(closeIcon) closeIcon.classList.add('hidden');
+            } else {
+                chatWin.classList.remove('hidden');
+                chatWin.classList.add('flex');
+                if(openIcon) openIcon.classList.add('hidden');
+                if(closeIcon) closeIcon.classList.remove('hidden');
+
+                if (!chatInitialized) {
+                    appendChatMessage('bot', 'Hello! How can I assist you today?');
+                    addQuickActions();
+                    chatInitialized = true;
+                }
+                setTimeout(() => document.getElementById('chat-input').focus(), 100);
+            }
+        }
+
+        function addQuickActions() {
+            const msgArea = document.getElementById('chat-messages');
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'flex flex-wrap gap-2 mt-2';
+            
+            const actions = [
+                { label: 'View Applications', cmd: 'pending applications' },
+                { label: 'View Volunteers', cmd: 'view volunteers' },
+                { label: 'Create Event', cmd: 'create event' },
+                { label: 'Dashboard Summary', cmd: 'dashboard summary' },
+                { label: 'AI Matching', cmd: 'how ai skill matching works' },
+                { label: 'Help', cmd: 'help' }
+            ];
+
+            actions.forEach(a => {
+                const btn = document.createElement('button');
+                btn.className = 'px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full text-[10px] font-bold text-slate-600 hover:border-indigo-600 hover:text-indigo-600 transition-all uppercase tracking-wide relative z-50';
+                btn.innerText = a.label;
+                btn.type = 'button';
+                btn.onclick = () => handleChatCommand(a.cmd);
+                actionsDiv.appendChild(btn);
+            });
+            
+            msgArea.appendChild(actionsDiv);
+            msgArea.scrollTop = msgArea.scrollHeight;
+        }
+
+        function handleChatCommand(cmd) {
+            appendChatMessage('user', cmd);
+            const botResponse = getBotResponse(cmd);
+            setTimeout(() => appendChatMessage('bot', botResponse), 500);
+        }
+
+        function getBotResponse(input) {
+            const lowInput = input.toLowerCase();
+            
+            // Move specific intent checks to the top to avoid generic greeting matching (like 'hi' in 'matching')
+            if (lowInput.includes('how ai skill matching works') || lowInput.includes('skill matching') || lowInput.includes('ai matching'))
+                return "Our AI engine matches volunteers to events based on their skills and location. For example, if you create an event requiring 'Teaching', the AI will automatically rank volunteers with 'Education' or 'Tutoring' skills higher in your directory, showing you a 'Top Match' badge.";
+            
+            if (lowInput.includes('hi') || lowInput.includes('hello')) 
+                return "Hello! How can I assist you today?";
+                
+            if (lowInput.includes('dashboard summary'))
+                return "You can view total volunteers, events, and applications on your dashboard.";
+            
+            if (lowInput.includes('pending applications')) 
+                return "Go to Applications section and select 'Pending' to review them.";
+            
+            if (lowInput.includes('accepted applications')) 
+                return "Accepted applications are listed under the 'Accepted' tab.";
+            
+            if (lowInput.includes('rejected applications')) 
+                return "Rejected applications are listed under the 'Rejected' tab.";
+            
+            if (lowInput.includes('view volunteers')) 
+                return "Navigate to Volunteers section to see all registered volunteers.";
+            
+            if (lowInput.includes('create event')) 
+                return "You can create a new event from the Events section in the dashboard.";
+                
+            if (lowInput.includes('download certificate')) 
+                return "Certificates are available after event completion. Use the download button in volunteer section.";
+                
+            if (lowInput.includes('help'))
+                return "You can ask about applications, volunteers, events, AI skill matching, or certificates.";
+            
+            return "Sorry, I didn't understand. Please try another question.";
+        }
+
+        function handleChatSend() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            appendChatMessage('user', text);
+            input.value = '';
+            
+            const response = getBotResponse(text);
+            setTimeout(() => appendChatMessage('bot', response), 600);
+        }
+
+        function appendChatMessage(role, text) {
+            const msgArea = document.getElementById('chat-messages');
+            const msgDiv = document.createElement('div');
+            
+            if(role === 'bot') {
+                msgDiv.className = 'max-w-[85%] self-start p-3 bg-slate-100 text-slate-800 rounded-2xl rounded-bl-sm text-sm font-medium animate-fade-in shadow-sm';
+            } else {
+                msgDiv.className = 'max-w-[85%] self-end p-3 bg-indigo-600 text-white rounded-2xl rounded-br-sm text-sm font-medium animate-fade-in shadow-sm';
+            }
+            
+            msgDiv.innerText = text;
+            msgArea.appendChild(msgDiv);
+            msgArea.scrollTop = msgArea.scrollHeight;
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // 1. Navigation Flow
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.dashboard-section').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Show selected section
+            const activeSection = document.getElementById(sectionId);
+            if (activeSection) {
+                activeSection.style.display = 'block';
+                // Trigger chart re-render if needed
+                if (sectionId === 'analytics-section') {
+                    renderCharts();
+                }
+                // Clear notification badge when notifications page is opened
+                if (sectionId === 'notifications-section') {
+                    const badge = document.getElementById('notif-badge');
+                    if (badge) badge.classList.add('hidden');
+                }
+            }
+
+            // Update sidebar active state
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.classList.remove('active', 'bg-indigo-600', 'text-white', 'shadow-xl', 'shadow-indigo-100');
+                link.classList.add('text-slate-500');
+
+                // Get the text to update header
+                if (link.getAttribute('onclick')?.includes(sectionId)) {
+                    link.classList.add('active', 'bg-indigo-600', 'text-white', 'shadow-xl', 'shadow-indigo-100');
+                    link.classList.remove('text-slate-500');
+                    document.getElementById('current-section-title').innerText = link.innerText.trim();
+                }
+            });
+
+            // Scroll main content to top
+            document.getElementById('main-content').scrollTop = 0;
+        }
+
+        // 2. Interactive Features
+        function toggleEventExpansion(id) {
+            const card = document.getElementById('event-' + id);
+            card.classList.toggle('expanded');
+            const btnText = card.querySelector('.btn-text');
+            btnText.innerText = card.classList.contains('expanded') ? 'Show Less' : 'Read More';
+        }
+
+        const matchData = {{ match_data | tojson | safe }};
+
+        function filterAndRecommend() {
+            const query = document.getElementById('volunteerSearch').value.toLowerCase();
+            const eventSelect = document.getElementById('eventTargetSelection');
+            const eventId = eventSelect.value;
+            const targetSkills = eventSelect.options[eventSelect.selectedIndex].getAttribute('data-skills') || "";
+            const cards = document.querySelectorAll('.volunteer-card');
+            const recGrid = document.getElementById('recommendationsGrid');
+            const volGrid = document.getElementById('volunteerGrid');
+            const recSection = document.getElementById('aiRecommendations');
+            const regularHeader = document.getElementById('regularVolunteersHeader');
+
+            recGrid.innerHTML = '';
+            const scores = [];
+            const regularCards = [];
+
+            cards.forEach(card => {
+                const volId = card.getAttribute('data-id');
+                const matchInfo = calculateMatchJS(volId, eventId);
+                card.setAttribute('data-match', matchInfo.score);
+
+                const badge = card.querySelector('.match-badge');
+
+                if (eventId) {
+                    const score = Math.round(matchInfo.score);
+
+                    // Reset styling
+                    badge.classList.remove('hidden', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-200', 'bg-amber-50', 'text-amber-700', 'border-amber-200', 'bg-slate-50', 'text-slate-500', 'border-slate-200', 'bg-rose-50', 'text-rose-700', 'border-rose-200');
+
+                    if (score >= 80) {
+                        badge.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
+                        badge.innerHTML = `<span class="match-score-text text-[10px] font-bold uppercase">Top Match: ${score}%</span>`;
+                    } else if (score >= 50) {
+                        badge.classList.add('bg-amber-50', 'text-amber-700', 'border-amber-200');
+                        badge.innerHTML = `<span class="match-score-text text-[10px] font-bold uppercase">AI Match: ${score}%</span>`;
+                    } else {
+                        badge.classList.add('bg-rose-50', 'text-rose-700', 'border-rose-200');
+                        badge.innerHTML = `<span class="match-score-text text-[10px] font-bold uppercase">AI Match: ${score}%</span>`;
+                    }
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+
+                const content = (card.getAttribute('data-name') + card.getAttribute('data-raw-skills') + card.getAttribute('data-location')).toLowerCase();
+                const matchesSearch = content.includes(query);
+
+                if (matchesSearch) {
+                    // Decide where it belongs
+                    if (eventId && matchInfo.score >= 80) {
+                        scores.push({ card: card, score: matchInfo.score });
+                    } else {
+                        regularCards.push(card);
+                    }
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Re-order containers
+            if (scores.length > 0) {
+                recSection.classList.remove('hidden');
+                regularHeader.classList.remove('hidden');
+                scores.sort((a, b) => b.score - a.score).forEach(item => {
+                    const card = item.card;
+                    card.classList.add('ring-1', 'ring-emerald-200');
+                    recGrid.appendChild(card);
+                });
+            } else {
+                recSection.classList.add('hidden');
+                regularHeader.classList.add('hidden');
+                cards.forEach(card => card.classList.remove('ring-1', 'ring-emerald-200'));
+            }
+
+            regularCards.forEach(card => {
+                card.classList.remove('ring-1', 'ring-emerald-200');
+                volGrid.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+
+
+        function calculateMatchJS(volId, eventId) {
+            if (!eventId || !volId) return { score: 0 };
+            const score = (matchData[eventId] && matchData[eventId][volId]) || 0;
+            return { score: score };
+        }
+
+        function sortVolunteers() {
+            const type = document.getElementById('volunteerSort').value;
+            const grid = document.getElementById('volunteerGrid');
+            const cards = Array.from(grid.querySelectorAll('.volunteer-card'));
+            cards.sort((a, b) => {
+                if (type === 'match') return b.getAttribute('data-match') - a.getAttribute('data-match');
+                return a.getAttribute('data-' + type).localeCompare(b.getAttribute('data-' + type));
+            });
+            cards.forEach(c => grid.appendChild(c));
+        }
+
+        // 3. Analytics Engine
+        const analyticsData = {{ analytics | tojson }};
+        let statusChart, skillChart, eventChart;
+
+        function renderCharts() {
+            if (statusChart) statusChart.destroy();
+            if (skillChart) skillChart.destroy();
+            if (eventChart) eventChart.destroy();
+
+            statusChart = new Chart(document.getElementById('statusChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(analyticsData.status_distribution),
+                    datasets: [{
+                        data: Object.values(analyticsData.status_distribution),
+                        backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { cutout: '75%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, font: { family: 'Outfit', weight: 'bold' } } } } }
+            });
+
+            skillChart = new Chart(document.getElementById('skillChart'), {
+                type: 'polarArea',
+                data: {
+                    labels: Object.keys(analyticsData.skill_distribution),
+                    datasets: [{
+                        data: Object.values(analyticsData.skill_distribution),
+                        backgroundColor: ['rgba(99, 102, 241, 0.5)', 'rgba(56, 189, 248, 0.5)', 'rgba(16, 185, 129, 0.5)', 'rgba(245, 158, 11, 0.5)'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, font: { family: 'Outfit', weight: 'bold' } } } } }
+            });
+
+            eventChart = new Chart(document.getElementById('eventChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(analyticsData.event_distribution),
+                    datasets: [{
+                        label: 'Applications',
+                        data: Object.values(analyticsData.event_distribution),
+                        backgroundColor: '#6366f1',
+                        borderRadius: 20
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } } }
+            });
+        }
+
+        window.onload = () => {
+            renderCharts();
+            // Optional: check URL hash to open specific section
+            const hash = window.location.hash;
+            if (hash && document.getElementById(hash.substring(1) + '-section')) {
+                showSection(hash.substring(1) + '-section');
+            }
+        };
+
+        // 4. Modal Flow
+        function openProfileModal(data) {
+            document.getElementById('modal-name').innerText = (data.first_name + ' ' + (data.last_name || '')).trim();
+
+            const grid = document.getElementById('modal-details-grid');
+            grid.innerHTML = `
+                <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Email</p>
+                    <p class="text-sm font-bold text-slate-700">${data.v_email || data.email || 'N/A'}</p>
+                </div>
+                <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Location</p>
+                    <p class="text-sm font-bold text-slate-700">${data.v_location || data.location || 'N/A'}</p>
+                </div>
+                <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100 md:col-span-2">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Impact Bio</p>
+                    <p class="text-xs font-bold text-slate-600 italic leading-relaxed">"${data.impact_bio || data.v_impact_bio || data.v_experience || data.experience || 'No description provided.'}"</p>
+                </div>
+            `;
+
+            const skillsBox = document.getElementById('modal-skills');
+            const skills = (data.v_skills || data.skills || '').split(',');
+            skillsBox.innerHTML = skills.map(s => s.trim() ? `<span class="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black border border-indigo-100">${s.trim().toUpperCase()}</span>` : '').join('');
+
+            document.getElementById('profile-modal').classList.remove('hidden');
+        }
+
+        function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); }
+
+        function openInviteModal(id) {
+            const modal = document.getElementById('invite-modal');
+            modal.querySelectorAll('[id^="invite-link-"]').forEach(link => {
+                const eventId = link.id.split('-').pop();
+                link.href = `/invite_volunteer/${id}/${eventId}`;
+            });
+            modal.classList.remove('hidden');
+        }
+
+        function filterApps(status) {
+            document.querySelectorAll('.app-filter-btn').forEach(b => {
+                if (b.innerText === status) {
+                    b.classList.add('active', 'bg-white', 'shadow-sm', 'text-indigo-600');
+                    b.classList.remove('text-slate-500');
+                } else {
+                    b.classList.remove('active', 'bg-white', 'shadow-sm', 'text-indigo-600');
+                    b.classList.add('text-slate-500');
+                }
+            });
+
+            const listContainer = document.getElementById('applications-container');
+            if (listContainer) {
+                listContainer.classList.remove('mode-all', 'mode-pending', 'mode-accepted', 'mode-rejected', 'mode-certificate');
+                listContainer.classList.add('mode-' + status.toLowerCase());
+            }
+
+            let visibleCount = 0;
+            // Filter Master List items
+            document.querySelectorAll('.app-master-item').forEach(c => {
+                let match = false;
+                if (status === 'All') {
+                    match = true;
+                } else if (status === 'Certificate') {
+                    match = (c.dataset.status === 'Accepted' && c.dataset.eventStatus === 'Completed');
+                } else {
+                    match = (c.dataset.status === status);
+                }
+                c.style.display = match ? 'block' : 'none';
+                if (match) visibleCount++;
+            });
+
+            const noAppsMsg = document.getElementById('no-apps-message');
+            if(noAppsMsg) {
+                noAppsMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+            }
+
+            // Clear right-side selection
+            document.querySelectorAll('.app-detail-card').forEach(c => {
+                c.classList.add('hidden');
+                c.classList.remove('flex');
+            });
+            document.querySelectorAll('.app-master-item').forEach(i => {
+                i.classList.remove('border-indigo-600', 'bg-indigo-50/30', 'shadow-md');
+                i.classList.add('border-slate-100');
+            });
+            const emptyState = document.getElementById('app-detail-empty');
+            if(emptyState) {
+                emptyState.style.display = 'flex';
+                emptyState.classList.add('z-10');
+            }
+        }
+
+        function selectApp(id, element) {
+            // Hide empty state
+            const emptyState = document.getElementById('app-detail-empty');
+            if(emptyState) {
+                emptyState.style.display = 'none';
+                emptyState.classList.remove('z-10');
+            }
+
+            // Hide all detail cards
+            document.querySelectorAll('.app-detail-card').forEach(c => {
+                c.classList.add('hidden');
+                c.classList.remove('flex');
+            });
+
+            // Show selected detail card
+            const activeCard = document.getElementById('app-detail-' + id);
+            if(activeCard) {
+                activeCard.classList.remove('hidden');
+                activeCard.classList.add('flex');
+            }
+            
+            // Remove active styles from all list items
+            document.querySelectorAll('.app-master-item').forEach(i => {
+                i.classList.remove('border-indigo-600', 'bg-indigo-50/30', 'shadow-md');
+                i.classList.add('border-slate-100');
+            });
+
+            // Add active style to selected
+            if(element) {
+                element.classList.remove('border-slate-100');
+                element.classList.add('border-indigo-600', 'bg-indigo-50/30', 'shadow-md');
+            }
+        }
+    </script>
+    <!-- Chatbot FAB -->
+    <div class="fixed bottom-8 right-8 z-[1000] flex flex-col items-end gap-5 pointer-events-none">
+        <!-- Chat Window -->
+        <div id="chatbot-window" class="hidden flex-col bg-white rounded-2xl w-[340px] shadow-2xl border border-slate-100 overflow-hidden transform transition-all origin-bottom-right pointer-events-auto">
+            <!-- Header -->
+            <div class="px-5 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-bold leading-tight">NGO Assistant</p>
+                    <p class="text-[10px] text-blue-100 font-medium">How can I help you?</p>
+                </div>
+                <button onclick="toggleChat()" class="text-white/80 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Messages Area -->
+            <div id="chat-messages"
+                class="flex-1 p-5 overflow-y-auto custom-scrollbar flex flex-col gap-4 min-h-[320px] max-h-[350px] bg-white">
+                <!-- Welcome Message and Quick Actions injected by JS -->
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-4 bg-white border-t border-slate-100 flex items-center gap-3">
+                <input type="text" id="chat-input" placeholder="Ask something..."
+                    class="flex-1 px-4 py-2.5 rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-sm font-medium"
+                    onkeydown="if(event.key === 'Enter') handleChatSend()">
+                <button onclick="handleChatSend()"
+                    class="text-indigo-600 hover:text-indigo-700 transition-colors">
+                    <i data-lucide="send" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- FAB Button -->
+        <button id="chatbot-fab" onclick="toggleChat()"
+            class="relative w-[60px] h-[60px] rounded-full flex items-center justify-center outline-none group hover:scale-105 active:scale-95 transition-all duration-300 pointer-events-auto cursor-pointer">
+            <div class="absolute inset-0 bg-indigo-500 rounded-full animate-ping opacity-25"></div>
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-full shadow-[0_8px_25px_rgba(79,70,229,0.5)] group-hover:shadow-[0_12px_30px_rgba(79,70,229,0.7)] transition-shadow"></div>
+            <div class="absolute inset-[2px] border border-white/30 rounded-full"></div>
+            <div class="absolute inset-0 flex items-center justify-center text-white z-10 text-2xl drop-shadow-md">
+                <i class="fa-solid fa-robot" id="chat-icon-open"></i>
+                <i data-lucide="chevron-down" id="chat-icon-close" class="w-7 h-7 hidden"></i>
+            </div>
+            <div class="absolute top-0 right-0 w-3.5 h-3.5 bg-rose-500 border-2 border-white rounded-full z-20 shadow-sm"></div>
+        </button>
+    </div>
+</body>
+</html>

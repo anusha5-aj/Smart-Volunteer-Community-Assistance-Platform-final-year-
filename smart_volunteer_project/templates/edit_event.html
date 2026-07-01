@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Event | Smart Volunteer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; }
+    </style>
+</head>
+<body class="bg-indigo-50/30 min-h-screen py-10 px-6">
+    <div class="max-w-2xl mx-auto">
+        <div class="mb-8">
+            <a href="{{ url_for('ngo_dashboard') }}" class="text-indigo-600 font-bold flex items-center hover:opacity-70 transition-opacity">
+                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Back to Events
+            </a>
+        </div>
+
+        <div class="glass-card p-10 shadow-2xl bg-white divide-y divide-slate-100">
+            <div class="pb-8">
+                <h1 class="text-3xl font-extrabold text-slate-900">Edit Event</h1>
+                <p class="text-slate-500 mt-2">Update the details of your community opportunity.</p>
+            </div>
+
+            <form action="{{ url_for('edit_event', event_id=event.id) }}" method="POST" class="pt-8 space-y-8">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">Event Title</label>
+                    <input type="text" name="event_title" value="{{ event.event_title }}" required placeholder="e.g. Weekend Beach Cleanup" 
+                        class="w-full px-4 py-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all">
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">Target Date</label>
+                        <input type="date" name="event_date" value="{{ event.event_date }}" required 
+                            class="w-full px-4 py-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">Location</label>
+                        <input type="text" name="location" value="{{ event.location }}" required placeholder="e.g. Regional Park" 
+                            class="w-full px-4 py-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all">
+                    </div>
+                </div>
+
+                <!-- Start & End Time on their own row -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Start Time AM/PM -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">Start Time</label>
+                        <input type="hidden" name="start_time" id="start_time_hidden">
+                        <div class="flex gap-3">
+                            <select id="start_hour" class="flex-1 px-3 py-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-600 transition-all bg-white font-semibold text-slate-700">
+                                {% for h in range(1, 13) %}
+                                <option value="{{ '%02d'|format(h) }}">{{ '%02d'|format(h) }}</option>
+                                {% endfor %}
+                            </select>
+                            <select id="start_min" class="flex-1 px-3 py-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-600 transition-all bg-white font-semibold text-slate-700">
+                                <option value="00">00</option>
+                                <option value="15">15</option>
+                                <option value="30">30</option>
+                                <option value="45">45</option>
+                            </select>
+                            <select id="start_ampm" class="w-24 px-3 py-4 rounded-xl border border-indigo-200 outline-none focus:ring-2 focus:ring-indigo-600 transition-all bg-indigo-50 font-bold text-indigo-600">
+                                <option value="AM">AM</option>
+                                <option value="PM">PM</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- End Time AM/PM -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">End Time</label>
+                        <input type="hidden" name="end_time" id="end_time_hidden">
+                        <div class="flex gap-3">
+                            <select id="end_hour" class="flex-1 px-3 py-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-600 transition-all bg-white font-semibold text-slate-700">
+                                {% for h in range(1, 13) %}
+                                <option value="{{ '%02d'|format(h) }}">{{ '%02d'|format(h) }}</option>
+                                {% endfor %}
+                            </select>
+                            <select id="end_min" class="flex-1 px-3 py-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-600 transition-all bg-white font-semibold text-slate-700">
+                                <option value="00">00</option>
+                                <option value="15">15</option>
+                                <option value="30">30</option>
+                                <option value="45">45</option>
+                            </select>
+                            <select id="end_ampm" class="w-24 px-3 py-4 rounded-xl border border-indigo-200 outline-none focus:ring-2 focus:ring-indigo-600 transition-all bg-indigo-50 font-bold text-indigo-600">
+                                <option value="AM">AM</option>
+                                <option value="PM">PM</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Required Volunteers on its own row -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">Required Volunteers</label>
+                        <input type="number" name="volunteer_limit" value="{{ event.volunteer_limit }}" min="1" required placeholder="e.g. 10" 
+                            class="w-full px-4 py-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">Required Skills (comma separated)</label>
+                    <input type="text" name="required_skills" value="{{ event.required_skills }}" required placeholder="e.g. Communication, Painting, Teaching" 
+                        class="w-full px-4 py-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all">
+                    <p class="text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-widest">Our AI will match volunteers based on these tags.</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">Description</label>
+                    <textarea name="description" rows="5" required placeholder="Tell volunteers about the event goals and what they will be doing..." 
+                        class="w-full px-4 py-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all">{{ event.description }}</textarea>
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" class="w-full gradient-bg text-white font-extrabold py-5 rounded-2xl shadow-xl hover:scale-[1.02] transition-transform">
+                        Update Event
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Pre-fill dropdowns from existing event times
+        function parseTime24(timeStr) {
+            if (!timeStr) return null;
+            // Handle "HH:MM:SS" or "HH:MM"
+            const parts = timeStr.toString().split(':');
+            if (parts.length < 2) return null;
+            let h = parseInt(parts[0], 10);
+            let m = parseInt(parts[1], 10);
+            return { h, m };
+        }
+
+        function setTimePicker(prefix, rawTime) {
+            const t = parseTime24(rawTime);
+            if (!t) return;
+            let { h, m } = t;
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            let h12 = h % 12 || 12;
+            const hStr = String(h12).padStart(2, '0');
+            // Find closest minute bucket
+            const mins = [0, 15, 30, 45];
+            const closest = mins.reduce((prev, curr) => Math.abs(curr - m) < Math.abs(prev - m) ? curr : prev);
+            const mStr = String(closest).padStart(2, '0');
+
+            document.getElementById(prefix + '_hour').value = hStr;
+            document.getElementById(prefix + '_min').value = mStr;
+            document.getElementById(prefix + '_ampm').value = ampm;
+        }
+
+        function ampmTo24(prefix) {
+            const h12 = parseInt(document.getElementById(prefix + '_hour').value, 10);
+            const m   = document.getElementById(prefix + '_min').value;
+            const ap  = document.getElementById(prefix + '_ampm').value;
+            let h24 = h12 % 12 + (ap === 'PM' ? 12 : 0);
+            return String(h24).padStart(2, '0') + ':' + m;
+        }
+
+        // Pre-fill on page load
+        setTimePicker('start', '{{ event.start_time }}');
+        setTimePicker('end',   '{{ event.end_time }}');
+
+        // On form submit, write 24h values to hidden inputs
+        document.querySelector('form').addEventListener('submit', function() {
+            document.getElementById('start_time_hidden').value = ampmTo24('start');
+            document.getElementById('end_time_hidden').value   = ampmTo24('end');
+        });
+    </script>
+</body>
+</html>
+
